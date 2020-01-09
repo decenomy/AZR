@@ -1,0 +1,8 @@
+/usr/bin/aezora-cli		--	gen_context(system_u:object_r:aezora_exec_t,s0)
+/usr/sbin/aezorad		--	gen_context(system_u:object_r:aezora_exec_t,s0)
+/usr/lib(64)?/aezora/aezorad		--	gen_context(system_u:object_r:aezora_exec_t,s0)
+
+/etc/aezora(/.*)?		gen_context(system_u:object_r:aezora_conf_t,s0)
+/var/lib/aezora(/.*)?		gen_context(system_u:object_r:aezora_var_lib_t,s0)
+
+(/var)?/run/aezorad(/.*)?   gen_context(system_u:object_r:aezora_var_run_t,s0)

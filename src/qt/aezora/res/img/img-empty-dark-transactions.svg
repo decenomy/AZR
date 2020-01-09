@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 23.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="ic_empty_Dark_transactions" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+	 x="0px" y="0px" viewBox="0 0 100 100" style="enable-background:new 0 0 100 100;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#413D4A;}
+	.st1{fill:#A09EA5;}
+	.st2{fill:none;}
+	.st3{fill:#A09EA4;}
+</style>
+<g id="Group_9036">
+	<path id="Path_18988" class="st0" d="M50,26c-13.3,0-24,10.7-24,24s10.7,24,24,24s24-10.7,24-24S63.3,26,50,26z M50,68
+		c-9.9,0-18-8.1-18-18s8.1-18,18-18s18,8.1,18,18S59.9,68,50,68z"/>
+	<g id="Group_9035">
+		<g id="Group_9034">
+			<path id="Path_18990" class="st1" d="M50,31c-10.5,0-19,8.5-19,19s8.5,19,19,19s19-8.5,19-19C69,39.5,60.5,31,50,31z M50,67
+				c-9.4,0-17-7.6-17-17s7.6-17,17-17s17,7.6,17,17C67,59.4,59.4,67,50,67z"/>
+			<path id="Rectangle_4693" class="st1" d="M83,56h2v4h-2V56z"/>
+			<path id="Rectangle_4694" class="st1" d="M83,44h2v8h-2V44z"/>
+			<path id="Rectangle_4695" class="st1" d="M15,48h2v8h-2V48z"/>
+			<path id="Rectangle_4696" class="st1" d="M15,40h2v4h-2V40z"/>
+			<path id="Path_18991" class="st1" d="M95.2,71H85v-7h-2v9h7.8L76,90.5L61.2,73H68v-2h-4.5c11.6-7.5,15-22.9,7.5-34.5
+				c-6.4-9.9-18.9-14-29.9-9.8L24,6.5L4.8,29H15v7h2v-9H9.2L24,9.5L38.8,27H32v2h4.5c-11.6,7.5-15,22.9-7.5,34.5
+				c6.4,9.9,18.9,14,29.9,9.8L76,93.5L95.2,71z M27,50c0-12.7,10.3-23,23-23s23,10.3,23,23S62.7,73,50,73C37.3,73,27,62.7,27,50z"/>
+		</g>
+	</g>
+</g>
+<path id="Rectangle_4697" class="st2" d="M0,0h100v100H0V0z"/>
+<g>
+	<polygon class="st3" points="51.9,41.6 48.6,41.6 41.7,58.4 45,58.4 	"/>
+	<polygon class="st3" points="52.1,54.3 50.2,49.5 48.2,54.3 	"/>
+	<polygon class="st3" points="52.6,43.5 51,47.5 55.4,58.4 58.7,58.4 	"/>
+</g>
+</svg>

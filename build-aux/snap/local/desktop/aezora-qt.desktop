@@ -1,0 +1,15 @@
+# http://standards.freedesktop.org/desktop-entry-spec/desktop-entry-spec-1.0.html
+
+[Desktop Entry]
+Encoding=UTF-8
+Name=AEZORA Core
+Comment=AEZORA Core QT main network
+GenericName=AEZORA Digital Currency QT client main network
+Exec=aezora-core.qt %u
+Terminal=false
+Type=Application
+Icon=${SNAP}/share/pixmaps/aezora.png
+MimeType=x-scheme-handler/aezora;
+Categories=X-Office;X-Finance;
+Keywords=internet;aezora;zazr;azr;core;wallet;qt;main;snap;launchpad;crypto;digital;currency;coin;token;zerocoin;
+Version=1.0

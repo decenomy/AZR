@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+    <defs>
+        <linearGradient id="a" x1="118.56" y1="540" x2="622.58" y2="540" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#ee357d"/>
+            <stop offset="1" stop-color="#da26ee"/>
+        </linearGradient>
+        <linearGradient id="b" x1="602.433" y1="366.279" x2="911.465" y2="907.084" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#5f3cc7"/>
+            <stop offset="1" stop-color="#853fd1"/>
+        </linearGradient>
+    </defs>
+    <g>
+        <polygon points="622.58 124.262 460.268 124.262 118.56 955.738 280.871 955.738 622.58 124.262" fill="url(#a)"/>
+        <polygon points="634.526 752.377 537.679 516.718 440.832 752.377 634.526 752.377" fill="#019def"/>
+        <polygon points="659.318 220.587 578.163 418.063 799.129 955.738 961.44 955.738 659.318 220.587" fill="url(#b)"/>
+    </g>
+</svg>
