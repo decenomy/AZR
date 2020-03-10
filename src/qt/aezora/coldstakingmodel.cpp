@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +21,7 @@ void ColdStakingModel::updateCSList() {
 }
 
 void ColdStakingModel::emitDataSetChanged() {
-    emit dataChanged(index(0, 0, QModelIndex()), index(cachedDelegations.size(), COLUMN_COUNT, QModelIndex()) );
+    Q_EMIT dataChanged(index(0, 0, QModelIndex()), index(cachedDelegations.size(), COLUMN_COUNT, QModelIndex()) );
 }
 
 void ColdStakingModel::refresh() {
@@ -178,6 +178,6 @@ void ColdStakingModel::removeRowAndEmitDataChanged(const int idx)
 {
     beginRemoveRows(QModelIndex(), idx, idx);
     endRemoveRows();
-    emit dataChanged(index(idx, 0, QModelIndex()), index(idx, COLUMN_COUNT, QModelIndex()) );
+    Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, COLUMN_COUNT, QModelIndex()) );
 }
 

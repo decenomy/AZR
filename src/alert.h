@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2013 The Bitcoin developers
-// Copyright (c) 2017-2019 The AEZORA developers
+// Copyright (c) 2017-2020 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ class CNode;
 class uint256;
 
 extern std::map<uint256, CAlert> mapAlerts;
-extern CCriticalSection cs_mapAlerts;
+extern RecursiveMutex cs_mapAlerts;
 
 /** Alerts are for notifying old versions if they become too obsolete and
  * need to upgrade.  The message is displayed in the status bar.

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,24 +39,24 @@ TopBar::TopBar(AEZORAGUI* _mainWindow, QWidget *parent) :
     ui->containerTop->setProperty("cssClass", "container-top");
 #endif
 
-    std::initializer_list<QWidget*> lblTitles = {ui->labelTitle1, ui->labelTitle2, ui->labelTitle3, ui->labelTitle4, ui->labelTitle5, ui->labelTitle6};
+    std::initializer_list<QWidget*> lblTitles = {ui->labelTitle1, ui->labelTitleAvailablezAzr, ui->labelTitle3, ui->labelTitle4, ui->labelTitlePendingzAzr, ui->labelTitleImmaturezAzr};
     setCssProperty(lblTitles, "text-title-topbar");
     QFont font;
     font.setWeight(QFont::Light);
-    foreach (QWidget* w, lblTitles) { w->setFont(font); }
+    Q_FOREACH (QWidget* w, lblTitles) { w->setFont(font); }
 
     // Amount information top
     ui->widgetTopAmount->setVisible(false);
     setCssProperty({ui->labelAmountTopAzr, ui->labelAmountTopzAzr}, "amount-small-topbar");
-    setCssProperty({ui->labelAmountAzr, ui->labelAmountzAzr}, "amount-topbar");
+    setCssProperty({ui->labelAmountAzr, ui->labelTitleAvailablezAzr}, "amount-topbar");
     setCssProperty({ui->labelPendingAzr, ui->labelPendingzAzr, ui->labelImmatureAzr, ui->labelImmaturezAzr}, "amount-small-topbar");
 
-    ui->labelTitle2->setVisible(false);
+    ui->labelTitleAvailablezAzr->setVisible(false);
     ui->labelAmountTopzAzr->setVisible(false);
-    ui->labelAmountzAzr->setVisible(false);
-    ui->labelTitle5->setVisible(false);
+    ui->labelAvailablezAzr->setVisible(false);
+    ui->labelTitlePendingzAzr->setVisible(false);
     ui->labelPendingzAzr->setVisible(false);
-    ui->labelTitle6->setVisible(false);
+    ui->labelTitleImmaturezAzr->setVisible(false);
     ui->labelImmaturezAzr->setVisible(false);
 
     // Progress Sync
@@ -79,15 +79,15 @@ TopBar::TopBar(AEZORAGUI* _mainWindow, QWidget *parent) :
     ui->pushButtonConnection->setButtonClassStyle("cssClass", "btn-check-connect-inactive");
     ui->pushButtonConnection->setButtonText("No Connection");
 
+    ui->pushButtonTor->setButtonClassStyle("cssClass", "btn-check-tor-inactive");
+    ui->pushButtonTor->setButtonText("Tor Disabled");
+    ui->pushButtonTor->setChecked(false);
+
     ui->pushButtonStack->setButtonClassStyle("cssClass", "btn-check-stack-inactive");
     ui->pushButtonStack->setButtonText("Staking Disabled");
 
     ui->pushButtonColdStaking->setButtonClassStyle("cssClass", "btn-check-cold-staking-inactive");
     ui->pushButtonColdStaking->setButtonText("Cold Staking Disabled");
-
-    ui->pushButtonMint->setButtonClassStyle("cssClass", "btn-check-mint-inactive");
-    ui->pushButtonMint->setButtonText("Automint Enabled");
-    ui->pushButtonMint->setVisible(false);
 
     ui->pushButtonSync->setButtonClassStyle("cssClass", "btn-check-sync");
     ui->pushButtonSync->setButtonText(" %54 Synchronizing..");
@@ -143,7 +143,7 @@ void TopBar::onThemeClicked(){
     }
     updateStyle(ui->pushButtonTheme);
 
-    emit themeChanged(lightTheme);
+    Q_EMIT themeChanged(lightTheme);
 }
 
 
@@ -216,6 +216,9 @@ void TopBar::lockDropdownClicked(const StateClicked& state){
                 walletModel->setWalletLocked(true);
                 ui->pushButtonLock->setButtonText("Wallet Locked");
                 ui->pushButtonLock->setButtonClassStyle("cssClass", "btn-check-status-lock", true);
+                // Directly update the staking status icon when the wallet is manually locked here
+                // so the feedback is instant (no need to wait for the polling timeout)
+                setStakingStatusActive(false);
                 break;
             }
             case 1: {
@@ -331,7 +334,7 @@ void TopBar::onColdStakingClicked() {
     ui->pushButtonColdStaking->setButtonText(text);
     updateStyle(ui->pushButtonColdStaking);
 
-    emit onShowHideColdStakingChanged(show);
+    Q_EMIT onShowHideColdStakingChanged(show);
 }
 
 TopBar::~TopBar(){
@@ -357,25 +360,23 @@ void TopBar::loadClientModel(){
     }
 }
 
-void TopBar::updateAutoMintStatus(){
-    ui->pushButtonMint->setButtonText(fEnableZeromint ? tr("Automint enabled") : tr("Automint disabled"));
-    ui->pushButtonMint->setChecked(fEnableZeromint);
-}
-
-void TopBar::updateStakingStatus(){
-    if (nLastCoinStakeSearchInterval) {
-        if (!ui->pushButtonStack->isChecked()) {
-            ui->pushButtonStack->setButtonText(tr("Staking active"));
-            ui->pushButtonStack->setChecked(true);
-            ui->pushButtonStack->setButtonClassStyle("cssClass", "btn-check-stack", true);
-        }
-    }else{
-        if (ui->pushButtonStack->isChecked()) {
-            ui->pushButtonStack->setButtonText(tr("Staking not active"));
-            ui->pushButtonStack->setChecked(false);
-            ui->pushButtonStack->setButtonClassStyle("cssClass", "btn-check-stack-inactive", true);
-        }
+void TopBar::setStakingStatusActive(bool fActive)
+{
+    if (ui->pushButtonStack->isChecked() != fActive) {
+        ui->pushButtonStack->setButtonText(fActive ? tr("Staking active") : tr("Staking not active"));
+        ui->pushButtonStack->setChecked(fActive);
+        ui->pushButtonStack->setButtonClassStyle("cssClass", (fActive ?
+                                                                "btn-check-stack" :
+                                                                "btn-check-stack-inactive"), true);
     }
+}
+void TopBar::updateStakingStatus(){
+    setStakingStatusActive(walletModel &&
+                           !walletModel->isWalletLocked() &&
+                           walletModel->isStakingStatusActive());
+
+    // Taking advantage of this timer to update Tor status if needed.
+    updateTorIcon();
 }
 
 void TopBar::setNumConnections(int count) {
@@ -421,15 +422,14 @@ void TopBar::setNumBlocks(int count) {
     bool needState = true;
     if (masternodeSync.IsBlockchainSynced()) {
         // chain synced
-        emit walletSynced(true);
+        Q_EMIT walletSynced(true);
         if (masternodeSync.IsSynced()) {
             // Node synced
-            // TODO: Set synced icon to pushButtonSync here..
-            ui->pushButtonSync->setButtonText(tr("Synchronized"));
+            ui->pushButtonSync->setButtonText(tr("Synchronized - Block: %1").arg(QString::number(count)));
             progressBar->setRange(0,100);
             progressBar->setValue(100);
             return;
-        }else{
+        } else {
 
             // TODO: Show out of sync warning
             int nAttempt = masternodeSync.RequestedMasternodeAttempt < MASTERNODE_SYNC_THRESHOLD ?
@@ -438,14 +438,14 @@ void TopBar::setNumBlocks(int count) {
             int progress = nAttempt + (masternodeSync.RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
             if(progress >= 0){
                 // todo: MN progress..
-                text = std::string("Synchronizing additional data..");//: %p%", progress);
+                text = strprintf("Synchronizing masternodes data... - Block: %d", count);
                 //progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
                 //progressBar->setValue(progress);
                 needState = false;
             }
         }
     } else {
-        emit walletSynced(false);
+        Q_EMIT walletSynced(false);
     }
 
     if(needState) {
@@ -486,7 +486,7 @@ void TopBar::setNumBlocks(int count) {
     ui->pushButtonSync->setButtonText(tr(text.data()));
 }
 
-void TopBar::loadWalletModel(){
+void TopBar::loadWalletModel() {
     connect(walletModel, SIGNAL(balanceChanged(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)), this,
             SLOT(updateBalances(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)));
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
@@ -498,6 +498,25 @@ void TopBar::loadWalletModel(){
     onColdStakingClicked();
 
     isInitializing = false;
+}
+
+void TopBar::updateTorIcon() {
+    std::string ip_port;
+    bool torEnabled = clientModel->getTorInfo(ip_port);
+
+    if (torEnabled) {
+        if(!ui->pushButtonTor->isChecked()) {
+            ui->pushButtonTor->setChecked(true);
+            ui->pushButtonTor->setButtonClassStyle("cssClass", "btn-check-tor", true);
+        }
+        QString ip_port_q = QString::fromStdString(ip_port);
+        ui->pushButtonTor->setButtonText(tr("Tor is <b>enabled</b>: %1").arg(ip_port_q));
+    } else {
+        if (ui->pushButtonTor->isChecked()) {
+            ui->pushButtonTor->setChecked(false);
+            ui->pushButtonTor->setButtonClassStyle("cssClass", "btn-check-tor-inactive", true);
+        }
+    }
 }
 
 void TopBar::refreshStatus(){
@@ -528,8 +547,7 @@ void TopBar::refreshStatus(){
     updateStyle(ui->pushButtonLock);
 }
 
-void TopBar::updateDisplayUnit()
-{
+void TopBar::updateDisplayUnit() {
     if (walletModel && walletModel->getOptionsModel()) {
         int displayUnitPrev = nDisplayUnit;
         nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
@@ -544,17 +562,17 @@ void TopBar::updateDisplayUnit()
 void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                             const CAmount& zerocoinBalance, const CAmount& unconfirmedZerocoinBalance, const CAmount& immatureZerocoinBalance,
                             const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
-                            const CAmount& delegatedBalance, const CAmount& coldStakedBalance){
+                            const CAmount& delegatedBalance, const CAmount& coldStakedBalance) {
+
     // Locked balance. //TODO move this to the signal properly in the future..
     CAmount nLockedBalance = 0;
     if (walletModel) {
         nLockedBalance = walletModel->getLockedBalance();
     }
     ui->labelTitle1->setText(nLockedBalance > 0 ? tr("Available (Locked included)") : tr("Available"));
-    // AZR Balance
-    //CAmount nTotalBalance = balance + unconfirmedBalance + immatureBalance;
-    CAmount azrAvailableBalance = balance + delegatedBalance;
 
+    // AZR Total
+    CAmount azrAvailableBalance = balance;
     // zAZR Balance
     CAmount matureZerocoinBalance = zerocoinBalance - unconfirmedZerocoinBalance - immatureZerocoinBalance;
 
@@ -563,16 +581,25 @@ void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBa
     QString totalzAzr = GUIUtil::formatBalance(matureZerocoinBalance, nDisplayUnit, true);
     // Top
     ui->labelAmountTopAzr->setText(totalAzr);
-    ui->labelAmountTopzAzr->setText(totalzAzr);
-
     // Expanded
     ui->labelAmountAzr->setText(totalAzr);
-    ui->labelAmountzAzr->setText(totalzAzr);
-
     ui->labelPendingAzr->setText(GUIUtil::formatBalance(unconfirmedBalance, nDisplayUnit));
-    ui->labelPendingzAzr->setText(GUIUtil::formatBalance(unconfirmedZerocoinBalance, nDisplayUnit, true));
-
     ui->labelImmatureAzr->setText(GUIUtil::formatBalance(immatureBalance, nDisplayUnit));
+
+    // Update display state and/or values for zAZR balances as necessary
+    bool fHaveZerocoins = zerocoinBalance > 0;
+
+    // Set visibility of zAZR label titles/values
+    ui->typeSpacerTop->setVisible(fHaveZerocoins);
+    ui->typeSpacerExpanded->setVisible(fHaveZerocoins);
+    ui->labelAmountTopzAzr->setVisible(fHaveZerocoins);
+    ui->zerocoinBalances->setVisible(fHaveZerocoins);
+
+    // Top
+    ui->labelAmountTopzAzr->setText(totalzAzr);
+    // Expanded
+    ui->labelAvailablezAzr->setText(totalzAzr);
+    ui->labelPendingzAzr->setText(GUIUtil::formatBalance(unconfirmedZerocoinBalance, nDisplayUnit, true));
     ui->labelImmaturezAzr->setText(GUIUtil::formatBalance(immatureZerocoinBalance, nDisplayUnit, true));
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ public:
 
     bool res = false;
 
-public slots:
+public Q_SLOTS:
     void ok();
 private:
     Ui::AddNewContactDialog *ui;

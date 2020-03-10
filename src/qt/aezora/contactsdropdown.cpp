@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -118,7 +118,7 @@ void ContactsDropdown::handleClick(const QModelIndex &index){
     QString address = rIndex.data(Qt::DisplayRole).toString();
     QModelIndex sibling = rIndex.sibling(rIndex.row(), AddressTableModel::Label);
     QString label = sibling.data(Qt::DisplayRole).toString();
-    emit contactSelected(address, label);
+    Q_EMIT contactSelected(address, label);
     close();
 }
 

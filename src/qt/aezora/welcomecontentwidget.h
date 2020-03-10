@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,10 +27,10 @@ public:
     void setModel(OptionsModel *model);
     void checkLanguage();
 
-signals:
+Q_SIGNALS:
     void onLanguageSelected();
 
-public slots:
+public Q_SLOTS:
     void onNextClicked();
     void onBackClicked();
     void onSkipClicked();

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,16 +13,16 @@ void Worker::process(){
         } catch (std::exception &e) {
             QString errorStr = QString::fromStdString(e.what());
             runnable->onError(errorStr, type);
-            emit error(errorStr, type);
+            Q_EMIT error(errorStr, type);
         } catch (...) {
             QString errorStr = QString::fromStdString("Unknown error running background task");
             runnable->onError(errorStr, type);
-            emit error(errorStr, type);
+            Q_EMIT error(errorStr, type);
         }
     } else {
-        emit error("Null runnable", type);
+        Q_EMIT error("Null runnable", type);
     }
-    emit finished();
+    Q_EMIT finished();
 };
 
 LoadingDialog::LoadingDialog(QWidget *parent) :

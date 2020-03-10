@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,7 +21,7 @@ MultiSendModel::MultiSendModel(QObject *parent) : QAbstractTableModel(parent){
 }
 
 void MultiSendModel::updateList(){
-    emit dataChanged(index(0, 0, QModelIndex()), index((int) pwalletMain->vMultiSend.size(), 5, QModelIndex()) );
+    Q_EMIT dataChanged(index(0, 0, QModelIndex()), index((int) pwalletMain->vMultiSend.size(), 5, QModelIndex()) );
 }
 
 int MultiSendModel::rowCount(const QModelIndex &parent) const{
@@ -288,7 +288,8 @@ void SettingsMultisendWidget::addMultiSend(QString address, int percentage, QStr
         // update the address book with the label given or no label if none was given.
         CBitcoinAddress address(strAddress);
         std::string userInputLabel = addressLabel.toStdString();
-        walletModel->updateAddressBookLabels(address.Get(), (userInputLabel.empty()) ? "(no label)" : userInputLabel, "send");
+        walletModel->updateAddressBookLabels(address.Get(), (userInputLabel.empty()) ? "(no label)" : userInputLabel,
+                AddressBook::AddressBookPurpose::SEND);
     }
 
     CWalletDB walletdb(pwalletMain->strWalletFile);

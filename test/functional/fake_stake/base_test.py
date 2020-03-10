@@ -14,7 +14,7 @@ from test_framework.blocktools import create_coinbase, create_block
 from test_framework.key import CECKey
 from test_framework.messages import CTransaction, CTxOut, CTxIn, COIN, msg_block
 from test_framework.mininode import network_thread_start
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import AezoraTestFramwork
 from test_framework.script import CScript, OP_CHECKSIG
 from test_framework.util import hash256, bytes_to_hex_str, hex_str_to_bytes, connect_nodes_bi, p2p_port
 
@@ -24,7 +24,7 @@ AEZORA_FakeStakeTest CLASS ----------------------------------------------------
 
 General Test Class to be extended by individual tests for each attack test
 '''
-class AEZORA_FakeStakeTest(BitcoinTestFramework):
+class AEZORA_FakeStakeTest(AezoraTestFramwork):
 
     def set_test_params(self):
         ''' Setup test environment

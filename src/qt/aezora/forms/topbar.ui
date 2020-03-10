@@ -119,7 +119,7 @@
                <string notr="true">padding:0px;margin:0px;</string>
               </property>
               <property name="text">
-               <string>480.0685 AZR</string>
+               <string notr="true">480.0685 AZR</string>
               </property>
              </widget>
             </item>
@@ -140,7 +140,7 @@
              </spacer>
             </item>
             <item alignment="Qt::AlignVCenter">
-             <widget class="QLabel" name="label_16">
+             <widget class="QLabel" name="typeSpacerTop">
               <property name="minimumSize">
                <size>
                 <width>1</width>
@@ -188,7 +188,7 @@ border:none;</string>
                </size>
               </property>
               <property name="text">
-               <string>1,000 zAZR</string>
+               <string notr="true">1,000 zAZR</string>
               </property>
              </widget>
             </item>
@@ -263,16 +263,6 @@ border:none;</string>
             </widget>
            </item>
            <item>
-            <widget class="ExpandableButton" name="pushButtonMint" native="true">
-             <property name="minimumSize">
-              <size>
-               <width>36</width>
-               <height>36</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="ExpandableButton" name="pushButtonStack" native="true">
              <property name="minimumSize">
               <size>
@@ -294,6 +284,16 @@ border:none;</string>
            </item>
            <item>
             <widget class="ExpandableButton" name="pushButtonConnection" native="true">
+             <property name="minimumSize">
+              <size>
+               <width>36</width>
+               <height>36</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="ExpandableButton" name="pushButtonTor" native="true">
              <property name="minimumSize">
               <size>
                <width>36</width>
@@ -398,7 +398,7 @@ border:none;</string>
                <item>
                 <widget class="QLabel" name="labelAmountAzr">
                  <property name="text">
-                  <string>480.0685 AZR</string>
+                  <string notr="true">480.0685 AZR</string>
                  </property>
                 </widget>
                </item>
@@ -421,7 +421,7 @@ border:none;</string>
                  <item>
                   <widget class="QLabel" name="labelPendingAzr">
                    <property name="text">
-                    <string>6.943 AZR</string>
+                    <string notr="true">6.943 AZR</string>
                    </property>
                   </widget>
                  </item>
@@ -455,7 +455,7 @@ border:none;</string>
                  <item>
                   <widget class="QLabel" name="labelImmatureAzr">
                    <property name="text">
-                    <string>10 AZR</string>
+                    <string notr="true">10 AZR</string>
                    </property>
                   </widget>
                  </item>
@@ -466,7 +466,7 @@ border:none;</string>
             </layout>
            </item>
            <item>
-            <widget class="QLabel" name="label_9">
+            <widget class="QLabel" name="typeSpacerExpanded">
              <property name="minimumSize">
               <size>
                <width>1</width>
@@ -490,91 +490,102 @@ border:none;</string>
             </widget>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_8">
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <property name="leftMargin">
-              <number>30</number>
-             </property>
-             <item>
-              <layout class="QVBoxLayout" name="verticalLayout">
-               <item>
-                <widget class="QLabel" name="labelTitle2">
-                 <property name="text">
-                  <string>Available</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="labelAmountzAzr">
-                 <property name="text">
-                  <string>1,000 zAZR</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_5">
-                 <item>
-                  <widget class="QLabel" name="labelTitle5">
-                   <property name="text">
-                    <string>Pending</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="labelPendingzAzr">
-                   <property name="text">
-                    <string>60 zAZR</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_4">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeType">
-                  <enum>QSizePolicy::Fixed</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_6">
-                 <item>
-                  <widget class="QLabel" name="labelTitle6">
-                   <property name="text">
-                    <string>Immature</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="labelImmaturezAzr">
-                   <property name="text">
-                    <string>10 zAZR</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </item>
-            </layout>
+            <widget class="QWidget" name="zerocoinBalances" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_8">
+              <property name="spacing">
+               <number>0</number>
+              </property>
+              <property name="leftMargin">
+               <number>30</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <layout class="QVBoxLayout" name="verticalLayout">
+                <item>
+                 <widget class="QLabel" name="labelTitleAvailablezAzr">
+                  <property name="text">
+                   <string>Available</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="labelAvailablezAzr">
+                  <property name="text">
+                   <string notr="true">1,000 zAZR</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout">
+                <property name="spacing">
+                 <number>0</number>
+                </property>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_5">
+                  <item>
+                   <widget class="QLabel" name="labelTitlePendingzAzr">
+                    <property name="text">
+                     <string>Pending</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="labelPendingzAzr">
+                    <property name="text">
+                     <string notr="true">60 zAZR</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_4">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Fixed</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_6">
+                  <item>
+                   <widget class="QLabel" name="labelTitleImmaturezAzr">
+                    <property name="text">
+                     <string>Immature</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="labelImmaturezAzr">
+                    <property name="text">
+                     <string notr="true">10 zAZR</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </item>
           </layout>
          </item>

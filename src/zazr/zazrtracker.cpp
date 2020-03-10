@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2019 The AEZORA developers
+// Copyright (c) 2018-2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,9 +9,7 @@
 #include "main.h"
 #include "txdb.h"
 #include "wallet/walletdb.h"
-#include "zazr/accumulators.h"
 #include "zazr/zazrwallet.h"
-#include "witness.h"
 
 
 CzAZRTracker::CzAZRTracker(std::string strWalletFile)
@@ -110,29 +108,6 @@ bool CzAZRTracker::GetMetaFromStakeHash(const uint256& hashStake, CMintMeta& met
     return false;
 }
 
-CoinWitnessData* CzAZRTracker::GetSpendCache(const uint256& hashStake)
-{
-    AssertLockHeld(cs_spendcache);
-    if (!mapStakeCache.count(hashStake)) {
-        std::unique_ptr<CoinWitnessData> uptr(new CoinWitnessData());
-        mapStakeCache.insert(std::make_pair(hashStake, std::move(uptr)));
-        return mapStakeCache.at(hashStake).get();
-    }
-
-    return mapStakeCache.at(hashStake).get();
-}
-
-bool CzAZRTracker::ClearSpendCache()
-{
-    AssertLockHeld(cs_spendcache);
-    if (!mapStakeCache.empty()) {
-        mapStakeCache.clear();
-        return true;
-    }
-
-    return false;
-}
-
 std::vector<uint256> CzAZRTracker::GetSerialHashes()
 {
     std::vector<uint256> vHashes;
@@ -163,7 +138,7 @@ CAmount CzAZRTracker::GetBalance(bool fConfirmedOnly, bool fUnconfirmedOnly) con
             CMintMeta meta = it.second;
             if (meta.isUsed || meta.isArchived)
                 continue;
-            bool fConfirmed = ((meta.nHeight < chainActive.Height() - Params().Zerocoin_MintRequiredConfirmations()) && !(meta.nHeight == 0));
+            bool fConfirmed = ((meta.nHeight < chainActive.Height() - Params().GetConsensus().ZC_MinMintConfirmations) && !(meta.nHeight == 0));
             if (fConfirmedOnly && !fConfirmed)
                 continue;
             if (fUnconfirmedOnly && fConfirmed)
@@ -191,7 +166,7 @@ std::vector<CMintMeta> CzAZRTracker::GetMints(bool fConfirmedOnly) const
         CMintMeta mint = it.second;
         if (mint.isArchived || mint.isUsed)
             continue;
-        bool fConfirmed = (mint.nHeight < chainActive.Height() - Params().Zerocoin_MintRequiredConfirmations());
+        bool fConfirmed = (mint.nHeight < chainActive.Height() - Params().GetConsensus().ZC_MinMintConfirmations);
         if (fConfirmedOnly && !fConfirmed)
             continue;
         vMints.emplace_back(mint);
@@ -488,7 +463,6 @@ std::set<CMintMeta> CzAZRTracker::ListMints(bool fUnusedOnly, bool fMatureOnly, 
         mempool.getTransactions(setMempool);
     }
 
-    std::map<libzerocoin::CoinDenomination, int> mapMaturity = GetMintMaturityHeight();
     for (auto& it : mapSerialHashes) {
         CMintMeta mint = it.second;
 
@@ -510,9 +484,7 @@ std::set<CMintMeta> CzAZRTracker::ListMints(bool fUnusedOnly, bool fMatureOnly, 
 
         if (fMatureOnly) {
             // Not confirmed
-            if (!mint.nHeight || mint.nHeight > chainActive.Height() - Params().Zerocoin_MintRequiredConfirmations())
-                continue;
-            if (mint.nHeight >= mapMaturity.at(mint.denom))
+            if (!mint.nHeight || mint.nHeight > chainActive.Height() - Params().GetConsensus().ZC_MinMintConfirmations)
                 continue;
         }
 

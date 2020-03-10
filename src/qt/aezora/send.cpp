@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -63,7 +63,7 @@ SendWidget::SendWidget(AEZORAGUI* parent) :
     setCssProperty(ui->labelSubtitle2, "text-subtitle");
 
     /* Address */
-    ui->labelSubtitleAddress->setText(tr("Enter a AEZORA address or contact label"));
+    ui->labelSubtitleAddress->setText(tr("Enter AEZORA address or contact label"));
     setCssProperty(ui->labelSubtitleAddress, "text-title");
 
 
@@ -347,7 +347,7 @@ bool SendWidget::send(QList<SendCoinsRecipient> recipients){
     prepareStatus = walletModel->prepareTransaction(currentTransaction, CoinControlDialog::coinControl);
 
     // process prepareStatus and on error generate message shown to user
-    GuiTransactionsUtils::ProcessSendCoinsReturn(
+    GuiTransactionsUtils::ProcessSendCoinsReturnAndInform(
             this,
             prepareStatus,
             walletModel,
@@ -376,7 +376,7 @@ bool SendWidget::send(QList<SendCoinsRecipient> recipients){
         // now send the prepared transaction
         WalletModel::SendCoinsReturn sendStatus = dialog->getStatus();
         // process sendStatus and on error generate message shown to user
-        GuiTransactionsUtils::ProcessSendCoinsReturn(
+        GuiTransactionsUtils::ProcessSendCoinsReturnAndInform(
                 this,
                 sendStatus,
                 walletModel
@@ -399,7 +399,7 @@ bool SendWidget::sendZazr(QList<SendCoinsRecipient> recipients){
         return false;
 
     if(sporkManager.IsSporkActive(SPORK_16_ZEROCOIN_MAINTENANCE_MODE)) {
-        emit message(tr("Spend Zerocoin"), tr("zAZR is currently undergoing maintenance."), CClientUIInterface::MSG_ERROR);
+        Q_EMIT message(tr("Spend Zerocoin"), tr("zAZR is currently undergoing maintenance."), CClientUIInterface::MSG_ERROR);
         return false;
     }
 
@@ -436,7 +436,7 @@ bool SendWidget::sendZazr(QList<SendCoinsRecipient> recipients){
            .arg(recipientsToString(recipients));
 
     bool ret = false;
-    emit message(
+    Q_EMIT message(
             tr("Spend Zerocoin"),
             sendBody,
             CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_MASK | CClientUIInterface::MODAL,
@@ -455,8 +455,6 @@ bool SendWidget::sendZazr(QList<SendCoinsRecipient> recipients){
 
     if (walletModel->sendZazr(
             vMintsSelected,
-            true,
-            true,
             receipt,
             outputs,
             changeAddress
@@ -472,7 +470,7 @@ bool SendWidget::sendZazr(QList<SendCoinsRecipient> recipients){
             body = tr("Version 1 zAZR require a security level of 100 to successfully spend.");
         } else {
             int nNeededSpends = receipt.GetNeededSpends(); // Number of spends we would need for this transaction
-            const int nMaxSpends = Params().Zerocoin_MaxSpendsPerTransaction(); // Maximum possible spends for one zAZR transaction
+            const int nMaxSpends = Params().GetConsensus().ZC_MaxSpendsPerTx; // Maximum possible spends for one zAZR transaction
             if (nNeededSpends > nMaxSpends) {
                 body = tr("Too much inputs (") + QString::number(nNeededSpends, 10) +
                        tr(") needed.\nMaximum allowed: ") + QString::number(nMaxSpends, 10);
@@ -482,7 +480,7 @@ bool SendWidget::sendZazr(QList<SendCoinsRecipient> recipients){
                 body = QString::fromStdString(receipt.GetStatusMessage());
             }
         }
-        emit message("zAZR transaction failed", body, CClientUIInterface::MSG_ERROR);
+        Q_EMIT message("zAZR transaction failed", body, CClientUIInterface::MSG_ERROR);
         return false;
     }
 }
@@ -503,9 +501,11 @@ void SendWidget::updateEntryLabels(QList<SendCoinsRecipient> recipients){
             if(label.compare(labelOld) != 0) {
                 CTxDestination dest = CBitcoinAddress(rec.address.toStdString()).Get();
                 if (!walletModel->updateAddressBookLabels(dest, label.toStdString(),
-                                                          this->walletModel->isMine(dest) ? "receive" : "send")) {
+                                                          this->walletModel->isMine(dest) ?
+                                                                  AddressBook::AddressBookPurpose::RECEIVE :
+                                                                  AddressBook::AddressBookPurpose::SEND)) {
                     // Label update failed
-                    emit message("", tr("Address label update failed for address: %1").arg(rec.address), CClientUIInterface::MSG_ERROR);
+                    Q_EMIT message("", tr("Address label update failed for address: %1").arg(rec.address), CClientUIInterface::MSG_ERROR);
                     return;
                 }
             }
@@ -566,7 +566,7 @@ void SendWidget::onOpenUriClicked(){
             entry->setAddressAndLabelOrDescription(rcp.address, rcp.message);
             entry->setAmount(BitcoinUnits::format(nDisplayUnit, rcp.amount, false));
         }
-        emit receivedURI(dlg->getURI());
+        Q_EMIT receivedURI(dlg->getURI());
     }
     dlg->deleteLater();
 }
@@ -736,7 +736,8 @@ void SendWidget::onContactMultiClicked(){
             if (label == dialog->getLabel()) {
                 return;
             }
-            if (walletModel->updateAddressBookLabels(azrAdd.Get(), dialog->getLabel().toStdString(), "send")) {
+            if (walletModel->updateAddressBookLabels(azrAdd.Get(), dialog->getLabel().toStdString(),
+                    AddressBook::AddressBookPurpose::SEND)) {
                 inform(tr("New Contact Stored"));
             } else {
                 inform(tr("Error Storing Contact"));

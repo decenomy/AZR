@@ -6,46 +6,12 @@ bin_PROGRAMS += qt/aezora-qt
 EXTRA_LIBRARIES += qt/libbitcoinqt.a
 
 # aezora qt core #
-QT_TS = \
-  qt/locale/aezora_bg.ts \
-  qt/locale/aezora_ca.ts \
-  qt/locale/aezora_cs.ts \
-  qt/locale/aezora_da.ts \
-  qt/locale/aezora_de.ts \
-  qt/locale/aezora_en.ts \
-  qt/locale/aezora_en_GB.ts \
-  qt/locale/aezora_en_US.ts \
-  qt/locale/aezora_eo.ts \
-  qt/locale/aezora_es.ts \
-  qt/locale/aezora_es_ES.ts \
-  qt/locale/aezora_fi.ts \
-  qt/locale/aezora_fr_FR.ts \
-  qt/locale/aezora_hi_IN.ts \
-  qt/locale/aezora_hr.ts \
-  qt/locale/aezora_hr_HR.ts \
-  qt/locale/aezora_it.ts \
-  qt/locale/aezora_ja.ts \
-  qt/locale/aezora_ko_KR.ts \
-  qt/locale/aezora_lt_LT.ts \
-  qt/locale/aezora_nl.ts \
-  qt/locale/aezora_pl.ts \
-  qt/locale/aezora_pt.ts \
-  qt/locale/aezora_pt_BR.ts \
-  qt/locale/aezora_ro_RO.ts \
-  qt/locale/aezora_ru.ts \
-  qt/locale/aezora_sk.ts \
-  qt/locale/aezora_sv.ts \
-  qt/locale/aezora_tr.ts \
-  qt/locale/aezora_uk.ts \
-  qt/locale/aezora_vi.ts \
-  qt/locale/aezora_zh_CN.ts \
-  qt/locale/aezora_zh_TW.ts
+include Makefile.qt_locale.include
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
-  qt/forms/blockexplorer.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/governancepage.ui \
   qt/forms/helpmessagedialog.ui \
@@ -115,7 +81,6 @@ QT_MOC_CPP = \
   qt/moc_bitcoinamountfield.cpp \
   qt/aezora/moc_aezoragui.cpp \
   qt/moc_bitcoinunits.cpp \
-  qt/moc_blockexplorer.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
@@ -232,7 +197,6 @@ BITCOIN_QT_H = \
   qt/bitcoinamountfield.h \
   qt/aezora/aezoragui.h \
   qt/bitcoinunits.h \
-  qt/blockexplorer.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
@@ -337,8 +301,6 @@ BITCOIN_QT_H = \
 RES_ICONS = \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/automint_active.png \
-  qt/res/icons/automint_inactive.png \
   qt/res/icons/bitcoin.ico \
   qt/res/icons/bitcoin.png \
   qt/res/icons/bitcoin_testnet.ico \
@@ -563,6 +525,8 @@ RES_ICONS = \
   qt/aezora/res/img/dark/ic-transaction-cs-contract-inactive.svg \
   qt/aezora/res/img/img-qr.svg \
   qt/aezora/res/img/ic-check-connect-off.svg \
+  qt/aezora/res/img/ic-check-tor-off.svg \
+  qt/aezora/res/img/ic-check-tor.svg \
   qt/aezora/res/img/ic-label.svg \
   qt/aezora/res/img/ic-transaction-received.svg \
   qt/aezora/res/img/dark/ic-transaction-received.svg \
@@ -619,7 +583,6 @@ BITCOIN_QT_BASE_CPP = \
   qt/bitcoinamountfield.cpp \
   qt/aezora/aezoragui.cpp \
   qt/bitcoinunits.cpp \
-  qt/blockexplorer.cpp \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
@@ -643,7 +606,6 @@ BITCOIN_QT_WALLET_CPP = \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
-  qt/blockexplorer.cpp \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
   qt/editaddressdialog.cpp \
@@ -756,7 +718,7 @@ RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 BITCOIN_RC = qt/res/aezora-qt-res.rc
 
 BITCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
-  -I$(builddir)/qt/forms
+  -I$(builddir)/qt/forms -DQT_NO_KEYWORDS
 
 qt_libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS) $(SVG_CFLAGS) $(CHARTS_CFLAGS)

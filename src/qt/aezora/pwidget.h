@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,13 @@ namespace Ui {
 class PWidget;
 }
 
-class PWidget : public QWidget, public Runnable
+class Translator
+{
+public:
+    virtual QString translate(const char *msg) = 0;
+};
+
+class PWidget : public QWidget, public Runnable, public Translator
 {
     Q_OBJECT
 public:
@@ -37,16 +43,14 @@ public:
     void inform(const QString& message);
     void emitMessage(const QString& title, const QString& message, unsigned int style, bool* ret = nullptr);
 
-    QString translate(const char *msg) {
-        return tr(msg);
-    }
+    QString translate(const char *msg) override { return tr(msg); }
 
-signals:
+Q_SIGNALS:
     void message(const QString& title, const QString& body, unsigned int style, bool* ret = nullptr);
     void showHide(bool show);
     bool execDialog(QDialog *dialog, int xDiv = 3, int yDiv = 5);
 
-protected slots:
+protected Q_SLOTS:
     virtual void changeTheme(bool isLightTheme, QString &theme);
     void onChangeTheme(bool isLightTheme, QString &theme);
 
@@ -70,7 +74,7 @@ private:
     QSharedPointer<WorkerTask> task;
 
     void init();
-private slots:
+private Q_SLOTS:
     void errorString(QString, int);
 
 };

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The AEZORA developers
+// Copyright (c) 2020 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,16 +25,16 @@ SettingsMultisendDialog::SettingsMultisendDialog(QWidget *parent) :
     setCssProperty(ui->labelTitle, "text-title-dialog");
 
     // Label
-    ui->labelSubtitleLabel->setText(tr("Label (optional)"));
+    ui->labelSubtitleLabel->setText(tr("Address Label (optional)"));
     setCssProperty(ui->labelSubtitleLabel, "text-title2-dialog");
 
-    ui->lineEditLabel->setPlaceholderText(tr("Enter a label to add this address in your address book"));
+    ui->lineEditLabel->setPlaceholderText(tr("Enter label to be saved with this address"));
     initCssEditLine(ui->lineEditLabel, true);
 
     // Address
-    ui->labelSubtitleAddress->setText("Enter a AEZORA address or contact label");
+    ui->labelSubtitleAddress->setText("Enter AEZORA address or contact label");
     setCssProperty(ui->labelSubtitleAddress, "text-title2-dialog");
-    ui->lineEditAddress->setPlaceholderText("e.g A7VFR83SQbiezrW72hjc… ");
+    ui->lineEditAddress->setPlaceholderText("Enter address");
     initCssEditLine(ui->lineEditAddress, true);
     ui->lineEditAddress->setValidator(new QRegExpValidator(QRegExp("^[A-Za-z0-9]+"), ui->lineEditAddress));
 

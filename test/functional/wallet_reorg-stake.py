@@ -3,12 +3,12 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import AezoraTestFramwork
 from test_framework.util import sync_blocks, sync_mempools, connect_nodes_bi, \
     p2p_port, assert_equal, assert_raises_rpc_error
 import urllib.parse
 
-class ReorgStakeTest(BitcoinTestFramework):
+class ReorgStakeTest(AezoraTestFramwork):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True

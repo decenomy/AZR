@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2019 The AEZORA developers
+// Copyright (c) 2015-2020 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -79,6 +79,10 @@ public:
     QString formatClientStartupTime() const;
     QString dataDir() const;
 
+    void setCacheNumBlocks(int blockNum) { cachedNumBlocks = blockNum; };
+    void setCacheReindexing(bool reindex) { cachedReindexing = reindex; };
+    void setCacheImporting(bool import) { cachedImporting = import; };
+
     bool getTorInfo(std::string& ip_port) const;
 
 private:
@@ -99,7 +103,7 @@ private:
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
-signals:
+Q_SIGNALS:
     void numConnectionsChanged(int count);
     void numBlocksChanged(int count);
     void strMasternodesChanged(const QString& strMasternodes);
@@ -112,7 +116,7 @@ signals:
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString& title, int nProgress);
 
-public slots:
+public Q_SLOTS:
     void updateTimer();
     void updateMnTimer();
     void updateNumConnections(int numConnections);
