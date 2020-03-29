@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -115,7 +115,7 @@ DashboardWidget::DashboardWidget(AEZORAGUI* parent) :
     ui->comboBoxSortType->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     ui->comboBoxSortType->addItem(tr("Cold stakes"), TransactionFilterProxy::TYPE(TransactionRecord::StakeDelegated));
     ui->comboBoxSortType->addItem(tr("Hot stakes"), TransactionFilterProxy::TYPE(TransactionRecord::StakeHot));
-    ui->comboBoxSortType->addItem(tr("Delegated"), TransactionFilterProxy::TYPE(TransactionRecord::P2CSDelegationSent) | TransactionFilterProxy::TYPE(TransactionRecord::P2CSDelegationSentOwner));
+    ui->comboBoxSortType->addItem(tr("Delegated"), TransactionFilterProxy::TYPE(TransactionRecord::P2CSDelegationSent));
     ui->comboBoxSortType->addItem(tr("Delegations"), TransactionFilterProxy::TYPE(TransactionRecord::P2CSDelegation));
     ui->comboBoxSortType->setCurrentIndex(0);
     connect(ui->comboBoxSortType, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(onSortTypeChanged(const QString&)));
@@ -127,9 +127,6 @@ DashboardWidget::DashboardWidget(AEZORAGUI* parent) :
     ui->listTransactions->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listTransactions->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui->listTransactions->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->listTransactions->setLayoutMode(QListView::LayoutMode::Batched);
-    ui->listTransactions->setBatchSize(50);
-    ui->listTransactions->setUniformItemSizes(true);
 
     // Sync Warning
     ui->layoutWarning->setVisible(true);
@@ -834,7 +831,7 @@ void DashboardWidget::processNewTransaction(const QModelIndex& parent, int start
     QString type = txModel->index(start, TransactionTableModel::Type, parent).data().toString();
     QString address = txModel->index(start, TransactionTableModel::ToAddress, parent).data().toString();
 
-    Q_EMIT incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address);
+    emit incomingTransaction(date, walletModel->getOptionsModel()->getDisplayUnit(), amount, type, address);
 }
 
 DashboardWidget::~DashboardWidget(){

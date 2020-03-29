@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,10 +44,10 @@ public:
         ST_ERROR
     };
 
-public Q_SLOTS:
+public slots:
     void check();
 
-Q_SIGNALS:
+signals:
     void reply(int status, const QString& message, quint64 available);
 
 private:
@@ -100,7 +100,7 @@ void FreespaceChecker::check()
         replyStatus = ST_ERROR;
         replyMessage = tr("Cannot create data directory here.");
     }
-    Q_EMIT reply(replyStatus, replyMessage, freeBytesAvailable);
+    emit reply(replyStatus, replyMessage, freeBytesAvailable);
 }
 
 
@@ -139,7 +139,7 @@ Intro::~Intro()
 {
     delete ui;
     /* Ensure thread is finished before it is deleted */
-    Q_EMIT stopThread();
+    emit stopThread();
     thread->wait();
 }
 
@@ -304,7 +304,7 @@ void Intro::checkPath(const QString& dataDir)
     pathToCheck = dataDir;
     if (!signalled) {
         signalled = true;
-        Q_EMIT requestCheck();
+        emit requestCheck();
     }
     mutex.unlock();
 }

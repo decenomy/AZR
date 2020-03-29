@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,10 +39,10 @@ SettingsSignMessageWidgets::SettingsSignMessageWidgets(AEZORAGUI* _window, QWidg
     ui->labelSubtitle1->setProperty("cssClass", "text-subtitle");
 
     // Address
-    ui->labelSubtitleAddress->setText(tr("AEZORA address or contact label"));
+    ui->labelSubtitleAddress->setText(tr("Enter a AEZORA address or contact label"));
     ui->labelSubtitleAddress->setProperty("cssClass", "text-title");
 
-    ui->addressIn_SM->setPlaceholderText(tr("Enter address"));
+    ui->addressIn_SM->setPlaceholderText(tr("Add address"));
     ui->addressIn_SM->setProperty("cssClass", "edit-primary-multi-book");
     ui->addressIn_SM->setAttribute(Qt::WA_MacShowFocusRect, 0);
     setShadow(ui->addressIn_SM);
@@ -61,7 +61,9 @@ SettingsSignMessageWidgets::SettingsSignMessageWidgets(AEZORAGUI* _window, QWidg
     ui->labelSubtitleMessage->setText(tr("Message"));
     ui->labelSubtitleMessage->setProperty("cssClass", "text-title");
 
-    ui->messageIn_SM->setPlaceholderText(tr("Write message"));
+#if QT_VERSION >= 0x050300
+    ui->messageIn_SM->setPlaceholderText(tr("Write a message"));
+#endif
     ui->messageIn_SM->setProperty("cssClass","edit-primary");
     setShadow(ui->messageIn_SM);
     ui->messageIn_SM->setAttribute(Qt::WA_MacShowFocusRect, 0);

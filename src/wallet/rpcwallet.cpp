@@ -1,7 +1,7 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -33,7 +33,7 @@
 
 
 int64_t nWalletUnlockTime;
-static RecursiveMutex cs_nWalletUnlockTime;
+static CCriticalSection cs_nWalletUnlockTime;
 
 std::string HelpRequiringPassphrase()
 {
@@ -103,19 +103,20 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
         throw std::runtime_error(
             "getnewaddress ( \"account\" )\n"
             "\nReturns a new AEZORA address for receiving payments.\n"
-            "If 'account' is specified (DEPRECATED), it is added to the address book \n"
+            "If 'account' is specified (recommended), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
 
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "1. \"account\"        (string, optional) The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
 
             "\nResult:\n"
             "\"aezoraaddress\"    (string) The new aezora address\n"
 
             "\nExamples:\n" +
-            HelpExampleCli("getnewaddress", "") + HelpExampleRpc("getnewaddress", ""));
+            HelpExampleCli("getnewaddress", "") + HelpExampleRpc("getnewaddress", "\"\"") +
+            HelpExampleCli("getnewaddress", "\"myaccount\"") + HelpExampleRpc("getnewaddress", "\"myaccount\""));
 
-    return GetNewAddressFromAccount(AddressBook::AddressBookPurpose::RECEIVE, params).ToString();
+    return GetNewAddressFromAccount("receive", params).ToString();
 }
 
 UniValue getnewstakingaddress(const UniValue& params, bool fHelp)
@@ -127,49 +128,46 @@ UniValue getnewstakingaddress(const UniValue& params, bool fHelp)
             "\nReturns a new AEZORA cold staking address for receiving delegated cold stakes.\n"
 
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "1. \"account\"        (string, optional) The account name for the address to be linked to. if not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
 
 
             "\nResult:\n"
             "\"aezoraaddress\"    (string) The new aezora address\n"
 
             "\nExamples:\n" +
-            HelpExampleCli("getnewstakingaddress", "") + HelpExampleRpc("getnewstakingaddress", ""));
+            HelpExampleCli("getnewstakingaddress", "") + HelpExampleRpc("getnewstakingaddress", "\"\"") +
+            HelpExampleCli("getnewstakingaddress", "\"myaccount\"") + HelpExampleRpc("getnewstakingaddress", "\"myaccount\""));
 
     return GetNewAddressFromAccount("coldstaking", params, CChainParams::STAKING_ADDRESS).ToString();
 }
 
 UniValue delegatoradd(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() != 1)
         throw std::runtime_error(
-            "delegatoradd \"addr\" ( \"label\" )\n"
+            "delegatoradd \"addr\"\n"
             "\nAdd the provided address <addr> into the allowed delegators AddressBook.\n"
             "This enables the staking of coins delegated to this wallet, owned by <addr>\n"
 
             "\nArguments:\n"
             "1. \"addr\"        (string, required) The address to whitelist\n"
-            "2. \"label\"       (string, optional) A label for the address to whitelist\n"
 
             "\nResult:\n"
             "true|false           (boolean) true if successful.\n"
 
             "\nExamples:\n" +
-            HelpExampleCli("delegatoradd", "AMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6") +
-            HelpExampleRpc("delegatoradd", "\"AMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\"") +
-            HelpExampleRpc("delegatoradd", "\"AMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\" \"myPaperWallet\""));
+            HelpExampleCli("delegatoradd", "DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6") +
+            HelpExampleRpc("delegatoradd", "\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\""));
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid() || address.IsStakingAddress())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid AEZORA address");
 
-    const std::string strLabel = (params.size() > 1 ? params[1].get_str() : "");
-
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to get KeyID from AEZORA address");
 
-    return pwalletMain->SetAddressBook(keyID, strLabel, AddressBook::AddressBookPurpose::DELEGATOR);
+    return pwalletMain->SetAddressBook(keyID, "", AddressBook::AddressBookPurpose::DELEGATOR);
 }
 
 UniValue delegatorremove(const UniValue& params, bool fHelp)
@@ -181,7 +179,7 @@ UniValue delegatorremove(const UniValue& params, bool fHelp)
             "This disables the staking of coins delegated to this wallet, owned by <addr>\n"
 
             "\nArguments:\n"
-            "1. \"addr\"        (string, required) The address to blacklist\n"
+            "1. \"addr\"        (string, required) The address to whitelist\n"
 
             "\nResult:\n"
             "true|false           (boolean) true if successful.\n"
@@ -215,10 +213,9 @@ UniValue delegatorremove(const UniValue& params, bool fHelp)
 
 UniValue ListaddressesForPurpose(const std::string strPurpose)
 {
-    const CChainParams::Base58Type addrType = (
-            AddressBook::IsColdStakingPurpose(strPurpose) ?
-                    CChainParams::STAKING_ADDRESS :
-                    CChainParams::PUBKEY_ADDRESS);
+    const CChainParams::Base58Type addrType =
+            strPurpose == "coldstaking" ?
+            CChainParams::STAKING_ADDRESS : CChainParams::PUBKEY_ADDRESS;
     UniValue ret(UniValue::VARR);
     {
         LOCK(pwalletMain->cs_wallet);
@@ -236,19 +233,15 @@ UniValue ListaddressesForPurpose(const std::string strPurpose)
 
 UniValue listdelegators(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() != 0)
         throw std::runtime_error(
-            "listdelegators ( fBlacklist )\n"
+            "listdelegators \"addr\"\n"
             "\nShows the list of allowed delegator addresses for cold staking.\n"
-
-            "\nArguments:\n"
-            "1. fBlacklist             (boolean, optional, default = false) Show addresses removed\n"
-            "                          from the delegators whitelist\n"
 
             "\nResult:\n"
             "[\n"
             "   {\n"
-            "   \"label\": \"yyy\",    (string) account label\n"
+            "   \"label\": \"yyy\",  (string) account label\n"
             "   \"address\": \"xxx\",  (string) AEZORA address string\n"
             "   }\n"
             "  ...\n"
@@ -258,10 +251,7 @@ UniValue listdelegators(const UniValue& params, bool fHelp)
             HelpExampleCli("listdelegators" , "") +
             HelpExampleRpc("listdelegators", ""));
 
-    const bool fBlacklist = (params.size() > 0 ? params[0].get_bool() : false);
-    return (fBlacklist ?
-            ListaddressesForPurpose(AddressBook::AddressBookPurpose::DELEGABLE) :
-            ListaddressesForPurpose(AddressBook::AddressBookPurpose::DELEGATOR));
+    return ListaddressesForPurpose("delegator");
 }
 
 UniValue liststakingaddresses(const UniValue& params, bool fHelp)
@@ -284,7 +274,7 @@ UniValue liststakingaddresses(const UniValue& params, bool fHelp)
             HelpExampleCli("liststakingaddresses" , "") +
             HelpExampleRpc("liststakingaddresses", ""));
 
-    return ListaddressesForPurpose(AddressBook::AddressBookPurpose::COLD_STAKING);
+    return ListaddressesForPurpose("coldstaking");
 }
 
 CBitcoinAddress GetAccountAddress(std::string strAccount, bool bForceNew = false)
@@ -314,7 +304,7 @@ CBitcoinAddress GetAccountAddress(std::string strAccount, bool bForceNew = false
         if (!pwalletMain->GetKeyFromPool(account.vchPubKey))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
-        pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, AddressBook::AddressBookPurpose::RECEIVE);
+        pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
         walletdb.WriteAccount(strAccount, account);
     }
 
@@ -326,7 +316,7 @@ UniValue getaccountaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw std::runtime_error(
             "getaccountaddress \"account\"\n"
-            "\nDEPRECATED. Returns the current AEZORA address for receiving payments to this account.\n"
+            "\nReturns the current AEZORA address for receiving payments to this account.\n"
 
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
@@ -387,7 +377,7 @@ UniValue setaccount(const UniValue& params, bool fHelp)
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw std::runtime_error(
             "setaccount \"aezoraaddress\" \"account\"\n"
-            "\nDEPRECATED. Sets the account associated with the given address.\n"
+            "\nSets the account associated with the given address.\n"
 
             "\nArguments:\n"
             "1. \"aezoraaddress\"  (string, required) The aezora address to be associated with an account.\n"
@@ -415,7 +405,7 @@ UniValue setaccount(const UniValue& params, bool fHelp)
             if (address == GetAccountAddress(strOldAccount))
                 GetAccountAddress(strOldAccount, true);
         }
-        pwalletMain->SetAddressBook(address.Get(), strAccount, AddressBook::AddressBookPurpose::RECEIVE);
+        pwalletMain->SetAddressBook(address.Get(), strAccount, "receive");
     } else
         throw JSONRPCError(RPC_MISC_ERROR, "setaccount can only be used with own address");
 
@@ -428,7 +418,7 @@ UniValue getaccount(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw std::runtime_error(
             "getaccount \"aezoraaddress\"\n"
-            "\nDEPRECATED. Returns the account associated with the given address.\n"
+            "\nReturns the account associated with the given address.\n"
 
             "\nArguments:\n"
             "1. \"aezoraaddress\"  (string, required) The aezora address for account lookup.\n"
@@ -458,7 +448,7 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw std::runtime_error(
             "getaddressesbyaccount \"account\"\n"
-            "\nDEPRECATED. Returns the list of addresses for the given account.\n"
+            "\nReturns the list of addresses for the given account.\n"
 
             "\nArguments:\n"
             "1. \"account\"  (string, required) The account name.\n"
@@ -593,9 +583,9 @@ UniValue CreateColdStakeDelegation(const UniValue& params, CWalletTx& wtxNew, CR
 
     // Get Amount
     CAmount nValue = AmountFromValue(params[1]);
-    if (nValue < MIN_COLDSTAKING_AMOUNT)
+    if (nValue < Params().GetMinColdStakingAmount())
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid amount (%d). Min amount: %d",
-                nValue, MIN_COLDSTAKING_AMOUNT));
+                nValue, Params().GetMinColdStakingAmount()));
 
     // include already delegated coins
     bool fUseDelegated = false;
@@ -835,7 +825,7 @@ UniValue listaddressgroupings(const UniValue& params, bool fHelp)
             "    [\n"
             "      \"aezoraaddress\",     (string) The aezora address\n"
             "      amount,                 (numeric) The amount in AZR\n"
-            "      \"account\"             (string, optional) The account (DEPRECATED)\n"
+            "      \"account\"             (string, optional) The account\n"
             "    ]\n"
             "    ,...\n"
             "  ]\n"
@@ -982,7 +972,7 @@ UniValue getreceivedbyaccount(const UniValue& params, bool fHelp)
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw std::runtime_error(
             "getreceivedbyaccount \"account\" ( minconf )\n"
-            "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
+            "\nReturns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
 
             "\nArguments:\n"
             "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
@@ -1091,12 +1081,12 @@ UniValue getbalance(const UniValue& params, bool fHelp)
         throw std::runtime_error(
             "getbalance ( \"account\" minconf includeWatchonly includeDelegated )\n"
             "\nIf account is not specified, returns the server's total available balance (excluding zerocoins).\n"
-            "If account is specified (DEPRECATED), returns the balance in the account.\n"
+            "If account is specified, returns the balance in the account.\n"
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
             "The server total may be different to the balance in the default \"\" account.\n"
 
             "\nArguments:\n"
-            "1. \"account\"      (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
+            "1. \"account\"      (string, optional) The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
             "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "3. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
             "4. includeDelegated (bool, optional, default=true) Also include balance delegated to cold stakers\n"
@@ -1105,12 +1095,16 @@ UniValue getbalance(const UniValue& params, bool fHelp)
             "amount              (numeric) The total amount in AZR received for this account.\n"
 
             "\nExamples:\n"
-            "\nThe total amount in the wallet\n" +
+            "\nThe total amount in the server across all accounts\n" +
             HelpExampleCli("getbalance", "") +
-            "\nThe total amount in the wallet, with at least 5 confirmations\n" +
+            "\nThe total amount in the server across all accounts, with at least 5 confirmations\n" +
             HelpExampleCli("getbalance", "\"*\" 6") +
+            "\nThe total amount in the default account with at least 1 confirmation\n" +
+            HelpExampleCli("getbalance", "\"\"") +
+            "\nThe total amount in the account named tabby with at least 6 confirmations\n" +
+            HelpExampleCli("getbalance", "\"tabby\" 6") +
             "\nAs a json rpc call\n" +
-            HelpExampleRpc("getbalance", "\"*\", 6"));
+            HelpExampleRpc("getbalance", "\"tabby\", 6"));
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -1136,21 +1130,23 @@ UniValue getcoldstakingbalance(const UniValue& params, bool fHelp)
         throw std::runtime_error(
             "getcoldstakingbalance ( \"account\" )\n"
             "\nIf account is not specified, returns the server's total available cold balance.\n"
-            "If account is specified (DEPRECATED), returns the cold balance in the account.\n"
+            "If account is specified, returns the cold balance in the account.\n"
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
             "The server total may be different to the balance in the default \"\" account.\n"
 
             "\nArguments:\n"
-            "1. \"account\"      (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
+            "1. \"account\"      (string, optional) The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
 
             "\nResult:\n"
             "amount              (numeric) The total amount in AZR received for this account in P2CS contracts.\n"
 
             "\nExamples:\n"
-            "\nThe total amount in the wallet\n" +
+            "\nThe total amount in the server across all accounts\n" +
             HelpExampleCli("getcoldstakingbalance", "") +
+            "\nThe total amount in the account named tabby\n" +
+            HelpExampleCli("getcoldstakingbalance", "\"tabby\"") +
             "\nAs a json rpc call\n" +
-            HelpExampleRpc("getcoldstakingbalance", "\"*\""));
+            HelpExampleRpc("getcoldstakingbalance", "\"tabby\""));
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -1168,21 +1164,23 @@ UniValue getdelegatedbalance(const UniValue& params, bool fHelp)
             "getdelegatedbalance ( \"account\" )\n"
             "\nIf account is not specified, returns the server's total available delegated balance (sum of all utxos delegated\n"
             "to a cold staking address to stake on behalf of addresses of this wallet).\n"
-            "If account is specified (DEPRECATED), returns the cold balance in the account.\n"
+            "If account is specified, returns the cold balance in the account.\n"
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
             "The server total may be different to the balance in the default \"\" account.\n"
 
             "\nArguments:\n"
-            "1. \"account\"      (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
+            "1. \"account\"      (string, optional) The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
 
             "\nResult:\n"
             "amount              (numeric) The total amount in AZR received for this account in P2CS contracts.\n"
 
             "\nExamples:\n"
-            "\nThe total amount in the wallet\n" +
+            "\nThe total amount in the server across all accounts\n" +
             HelpExampleCli("getdelegatedbalance", "") +
+            "\nThe total amount in the account named tabby\n" +
+            HelpExampleCli("getdelegatedbalance", "\"tabby\"") +
             "\nAs a json rpc call\n" +
-            HelpExampleRpc("getdelegatedbalance", "\"*\""));
+            HelpExampleRpc("getdelegatedbalance", "\"tabby\""));
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -1211,7 +1209,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw std::runtime_error(
             "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
-            "\nDEPRECATED. Move a specified amount from one account in your wallet to another.\n"
+            "\nMove a specified amount from one account in your wallet to another.\n"
 
             "\nArguments:\n"
             "1. \"fromaccount\"   (string, required) The name of the account to move funds from. May be the default account using \"\".\n"
@@ -1281,7 +1279,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
     if (fHelp || params.size() < 3 || params.size() > 7)
         throw std::runtime_error(
             "sendfrom \"fromaccount\" \"toaezoraaddress\" amount ( minconf \"comment\" \"comment-to\" includeDelegated)\n"
-            "\nDEPRECATED (use sendtoaddress). Send an amount from an account to a azr address.\n"
+            "\nSent an amount from an account to a aezora address.\n"
             "The amount is a real and is rounded to the nearest 0.00000001." +
             HelpRequiringPassphrase() + "\n"
 
@@ -1352,7 +1350,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
             HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
-            "1. \"fromaccount\"         (string, required) DEPRECATED. The account to send the funds from. Should be \"\" for the default account\n"
+            "1. \"fromaccount\"         (string, required) The account to send the funds from, can be \"\" for the default account\n"
             "2. \"amounts\"             (string, required) A json object with addresses and amounts\n"
             "    {\n"
             "      \"address\":amount   (numeric) The aezora address is the key, the numeric amount in AZR is the value\n"
@@ -1368,11 +1366,11 @@ UniValue sendmany(const UniValue& params, bool fHelp)
 
             "\nExamples:\n"
             "\nSend two amounts to two different addresses:\n" +
-            HelpExampleCli("sendmany", "\"\" \"{\\\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\\\":0.01,\\\"AAD3Y6ivr8nPQLT1NEPX84DxGCw9jz9Jvg\\\":0.02}\"") +
+            HelpExampleCli("sendmany", "\"tabby\" \"{\\\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\\\":0.01,\\\"DAD3Y6ivr8nPQLT1NEPX84DxGCw9jz9Jvg\\\":0.02}\"") +
             "\nSend two amounts to two different addresses setting the confirmation and comment:\n" +
-            HelpExampleCli("sendmany", "\"\" \"{\\\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\\\":0.01,\\\"AAD3Y6ivr8nPQLT1NEPX84DxGCw9jz9Jvg\\\":0.02}\" 6 \"testing\"") +
+            HelpExampleCli("sendmany", "\"tabby\" \"{\\\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\\\":0.01,\\\"DAD3Y6ivr8nPQLT1NEPX84DxGCw9jz9Jvg\\\":0.02}\" 6 \"testing\"") +
             "\nAs a json rpc call\n" +
-            HelpExampleRpc("sendmany", "\"\", \"{\\\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\\\":0.01,\\\"AAD3Y6ivr8nPQLT1NEPX84DxGCw9jz9Jvg\\\":0.02}\", 6, \"testing\""));
+            HelpExampleRpc("sendmany", "\"tabby\", \"{\\\"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\\\":0.01,\\\"DAD3Y6ivr8nPQLT1NEPX84DxGCw9jz9Jvg\\\":0.02}\", 6, \"testing\""));
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -1442,7 +1440,7 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
             "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
             "Each key is a AEZORA address or hex-encoded public key.\n"
-            "If 'account' is specified (DEPRECATED), assign address to that account.\n"
+            "If 'account' is specified, assign address to that account.\n"
 
             "\nArguments:\n"
             "1. nrequired        (numeric, required) The number of required signatures out of the n keys or addresses.\n"
@@ -1451,7 +1449,7 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
             "       \"address\"  (string) aezora address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
-            "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "3. \"account\"      (string, optional) An account to assign the addresses to.\n"
 
             "\nResult:\n"
             "\"aezoraaddress\"  (string) A aezora address associated with the keys.\n"
@@ -1473,7 +1471,7 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
     CScriptID innerID(inner);
     pwalletMain->AddCScript(inner);
 
-    pwalletMain->SetAddressBook(innerID, strAccount, AddressBook::AddressBookPurpose::SEND);
+    pwalletMain->SetAddressBook(innerID, strAccount, "send");
     return CBitcoinAddress(innerID).ToString();
 }
 
@@ -1625,7 +1623,7 @@ UniValue listreceivedbyaddress(const UniValue& params, bool fHelp)
             "  {\n"
             "    \"involvesWatchonly\" : \"true\",    (bool) Only returned if imported addresses were involved in transaction\n"
             "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
-            "    \"account\" : \"accountname\",       (string) DEPRECATED. The account of the receiving address. The default account is \"\".\n"
+            "    \"account\" : \"accountname\",       (string) The account of the receiving address. The default account is \"\".\n"
             "    \"amount\" : x.xxx,                  (numeric) The total amount in AZR received by the address\n"
             "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included\n"
             "    \"bcconfirmations\" : n              (numeric) The number of blockchain confirmations of the most recent transaction included\n"
@@ -1646,7 +1644,7 @@ UniValue listreceivedbyaccount(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 3)
         throw std::runtime_error(
             "listreceivedbyaccount ( minconf includeempty includeWatchonly)\n"
-            "\nDEPRECATED. List balances by account.\n"
+            "\nList balances by account.\n"
 
             "\nArguments:\n"
             "1. minconf      (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
@@ -1841,7 +1839,8 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
             "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
 
             "\nArguments:\n"
-            "1. \"account\"    (string, optional) DEPRECATED. The account name. Should be \"*\".\n"
+            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
+            "                                     If \"\" is set, it will list transactions for the default account.\n"
             "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
             "4. includeWatchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
@@ -1851,7 +1850,7 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. \n"
+            "    \"account\":\"accountname\",       (string) The account name associated with the transaction. \n"
             "                                                It will be \"\" for the default account.\n"
             "    \"address\":\"aezoraaddress\",    (string) The aezora address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
@@ -1890,10 +1889,12 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             "\nList the most recent 10 transactions in the systems\n" +
             HelpExampleCli("listtransactions", "") +
-            "\nList transactions 100 to 120\n" +
-            HelpExampleCli("listtransactions", "\"*\" 20 100") +
+            "\nList the most recent 10 transactions for the tabby account\n" +
+            HelpExampleCli("listtransactions", "\"tabby\"") +
+            "\nList transactions 100 to 120 from the tabby account\n" +
+            HelpExampleCli("listtransactions", "\"tabby\" 20 100") +
             "\nAs a json rpc call\n" +
-            HelpExampleRpc("listtransactions", "\"*\", 20, 100"));
+            HelpExampleRpc("listtransactions", "\"tabby\", 20, 100"));
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
@@ -1965,7 +1966,7 @@ UniValue listaccounts(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 2)
         throw std::runtime_error(
             "listaccounts ( minconf includeWatchonly)\n"
-            "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
+            "\nReturns Object that has account names as keys, account balances as values.\n"
 
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
@@ -2052,7 +2053,7 @@ UniValue listsinceblock(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
-            "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. Will be \"\" for the default account.\n"
+            "    \"account\":\"accountname\",       (string) The account name associated with the transaction. Will be \"\" for the default account.\n"
             "    \"address\":\"aezoraaddress\",    (string) The aezora address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in AZR. This is negative for the 'send' category, and for the 'move' category for moves \n"
@@ -2149,7 +2150,7 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"details\" : [\n"
             "    {\n"
-            "      \"account\" : \"accountname\",  (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
+            "      \"account\" : \"accountname\",  (string) The account name involved in the transaction, can be \"\" for the default account.\n"
             "      \"address\" : \"aezoraaddress\",   (string) The aezora address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx                  (numeric) The amount in AZR\n"
@@ -2320,7 +2321,7 @@ UniValue walletpassphrase(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             "\nUnlock the wallet for 60 seconds\n" +
             HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60") +
-            "\nUnlock the wallet for 60 seconds but allow staking only\n" +
+            "\nUnlock the wallet for 60 seconds but allow anonymization, automint, and staking only\n" +
             HelpExampleCli("walletpassphrase", "\"my pass phrase\" 60 true") +
             "\nLock the wallet again (before 60 seconds)\n" +
             HelpExampleCli("walletlock", "") +
@@ -2718,7 +2719,8 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
             "  \"keypoololdest\": xxxxxx,                 (numeric) the timestamp (seconds since GMT epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,                     (numeric) how many new keys are pre-generated\n"
             "  \"unlocked_until\": ttt,                   (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
-            "  \"paytxfee\": x.xxxx                       (numeric) the transaction fee configuration, set in AZR/kB\n"
+            "  \"paytxfee\": x.xxxx,                      (numeric) the transaction fee configuration, set in AZR/kB\n"
+            "  \"automintaddresses\": status              (boolean) the status of automint addresses (true if enabled, false if disabled)\n"
             "}\n"
 
             "\nExamples:\n" +
@@ -2741,6 +2743,7 @@ UniValue getwalletinfo(const UniValue& params, bool fHelp)
     if (pwalletMain->IsCrypted())
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
+    obj.push_back(Pair("automintaddresses", fEnableAutoConvert));
     return obj;
 }
 
@@ -2789,34 +2792,33 @@ UniValue reservebalance(const UniValue& params, bool fHelp)
     return result;
 }
 
+// presstab HyperStake
 UniValue setstakesplitthreshold(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw std::runtime_error(
-            "setstakesplitthreshold value\n\n"
-            "This will set the stake-split threshold value.\n"
-            "Whenever a successful stake is found, the stake amount is split across as many outputs (each with a value\n"
-            "higher than the threshold) as possible.\n"
-            "E.g. If the coinstake input + the block reward is 2000, and the split threshold is 499, the corresponding\n"
-            "coinstake transaction will have 4 outputs (of 500 AZR each)."
-            + HelpRequiringPassphrase() + "\n"
+            "setstakesplitthreshold value\n"
+            "\nThis will set the output size of your stakes to never be below this number\n" +
+            HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
-            "1. value                   (numeric, required) Threshold value (in AZR).\n"
-            "                                               Set to 0 to disable stake-splitting\n"
+            "1. value   (numeric, required) Threshold value between 1 and 999999\n"
 
             "\nResult:\n"
             "{\n"
-            "  \"threshold\": n,        (numeric) Threshold value set\n"
+            "  \"threshold\": n,    (numeric) Threshold value set\n"
             "  \"saved\": true|false    (boolean) 'true' if successfully saved to the wallet file\n"
             "}\n"
 
             "\nExamples:\n" +
-            HelpExampleCli("setstakesplitthreshold", "500.12") + HelpExampleRpc("setstakesplitthreshold", "500.12"));
+            HelpExampleCli("setstakesplitthreshold", "5000") + HelpExampleRpc("setstakesplitthreshold", "5000"));
 
     EnsureWalletIsUnlocked();
 
-    CAmount nStakeSplitThreshold = AmountFromValue(params[0]);
+    uint64_t nStakeSplitThreshold = params[0].get_int();
+
+    if (nStakeSplitThreshold > 999999)
+        throw std::runtime_error("Value out of range, max allowed is 999999");
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
     LOCK(pwalletMain->cs_wallet);
@@ -2825,7 +2827,7 @@ UniValue setstakesplitthreshold(const UniValue& params, bool fHelp)
 
         UniValue result(UniValue::VOBJ);
         pwalletMain->nStakeSplitThreshold = nStakeSplitThreshold;
-        result.push_back(Pair("threshold", ValueFromAmount(pwalletMain->nStakeSplitThreshold)));
+        result.push_back(Pair("threshold", int(pwalletMain->nStakeSplitThreshold)));
         if (fFileBacked) {
             walletdb.WriteStakeSplitThreshold(nStakeSplitThreshold);
             result.push_back(Pair("saved", "true"));
@@ -2836,6 +2838,7 @@ UniValue setstakesplitthreshold(const UniValue& params, bool fHelp)
     }
 }
 
+// presstab HyperStake
 UniValue getstakesplitthreshold(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -2849,7 +2852,7 @@ UniValue getstakesplitthreshold(const UniValue& params, bool fHelp)
             "\nExamples:\n" +
             HelpExampleCli("getstakesplitthreshold", "") + HelpExampleRpc("getstakesplitthreshold", ""));
 
-    return ValueFromAmount(pwalletMain->nStakeSplitThreshold);
+    return int(pwalletMain->nStakeSplitThreshold);
 }
 
 UniValue autocombinerewards(const UniValue& params, bool fHelp)
@@ -2917,7 +2920,7 @@ UniValue printMultiSend()
 UniValue printAddresses()
 {
     std::vector<COutput> vCoins;
-    pwalletMain->AvailableCoins(&vCoins);
+    pwalletMain->AvailableCoins(vCoins);
     std::map<std::string, double> mapAddresses;
     for (const COutput& out : vCoins) {
         CTxDestination utxoAddress;
@@ -3167,8 +3170,7 @@ UniValue listmintedzerocoins(const UniValue& params, bool fHelp)
 
             "\nArguments:\n"
             "1. fVerbose      (boolean, optional, default=false) Output mints metadata.\n"
-            "2. fMatureOnly   (boolean, optional, default=false) List only mature mints.\n"
-            "                 Set only if fVerbose is specified\n"
+            "2. fMatureOnly      (boolean, optional, default=false) List only mature mints. (Set only if fVerbose is specified)\n"
 
             "\nResult (with fVerbose=false):\n"
             "[\n"
@@ -3220,6 +3222,7 @@ UniValue listmintedzerocoins(const UniValue& params, bool fHelp)
             objMint.push_back(Pair("mint height", m.nHeight));              // Mint Height
             int nConfirmations = (m.nHeight && nBestHeight > m.nHeight) ? nBestHeight - m.nHeight : 0;
             objMint.push_back(Pair("confirmations", nConfirmations));       // Confirmations
+            // hashStake
             if (m.hashStake == 0) {
                 CZerocoinMint mint;
                 if (pwalletMain->GetMint(m.hashSerial, mint)) {
@@ -3229,7 +3232,7 @@ UniValue listmintedzerocoins(const UniValue& params, bool fHelp)
                     pwalletMain->zazrTracker->UpdateState(m);
                 }
             }
-            objMint.push_back(Pair("hash stake", m.hashStake.GetHex()));    // hashStake
+            objMint.push_back(Pair("hash stake", m.hashStake.GetHex()));       // Confirmations
             // Push back mint object
             jsonList.push_back(objMint);
         }
@@ -3339,20 +3342,17 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
             "  ]\n"
 
             "\nResult:\n"
-            "{\n"
-            "   \"txid\": \"xxx\",       (string) Transaction ID.\n"
-            "   \"time\": nnn            (numeric) Time to mint this transaction.\n"
-            "   \"mints\":\n"
-            "   [\n"
-            "      {\n"
-            "         \"denomination\": nnn,     (numeric) Minted denomination.\n"
-            "         \"pubcoin\": \"xxx\",      (string) Pubcoin in hex format.\n"
-            "         \"randomness\": \"xxx\",   (string) Hex encoded randomness.\n"
-            "         \"serial\": \"xxx\",       (string) Serial in hex format.\n"
-            "      },\n"
-            "      ...\n"
-            "   ]\n"
-            "}\n"
+            "[\n"
+            "  {\n"
+            "    \"txid\": \"xxx\",         (string) Transaction ID.\n"
+            "    \"value\": amount,       (numeric) Minted amount.\n"
+            "    \"pubcoin\": \"xxx\",      (string) Pubcoin in hex format.\n"
+            "    \"randomness\": \"xxx\",   (string) Hex encoded randomness.\n"
+            "    \"serial\": \"xxx\",       (string) Serial in hex format.\n"
+            "    \"time\": nnn            (numeric) Time to mint this transaction.\n"
+            "  }\n"
+            "  ,...\n"
+            "]\n"
 
             "\nExamples:\n"
             "\nMint 50 from anywhere\n" +
@@ -3363,7 +3363,7 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
             HelpExampleRpc("mintzerocoin", "13, \"[{\\\"txid\\\":\\\"a08e6907dbbd3d809776dbfc5d82e371b764ed838b5655e72f463568df1aadf0\\\",\\\"vout\\\":1}]\""));
 
 
-    if (!Params().IsRegTestNet())
+    if (Params().NetworkID() != CBaseChainParams::REGTEST)
         throw JSONRPCError(RPC_WALLET_ERROR, "zAZR minting is DISABLED");
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -3420,36 +3420,37 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
-    UniValue retObj(UniValue::VOBJ);
-    retObj.push_back(Pair("txid", wtx.GetHash().ToString()));
-    retObj.push_back(Pair("time", GetTimeMillis() - nTime));
     UniValue arrMints(UniValue::VARR);
     for (CDeterministicMint dMint : vDMints) {
         UniValue m(UniValue::VOBJ);
-        m.push_back(Pair("denomination", ValueFromAmount(libzerocoin::ZerocoinDenominationToAmount(dMint.GetDenomination()))));
+        m.push_back(Pair("txid", wtx.GetHash().ToString()));
+        m.push_back(Pair("value", ValueFromAmount(libzerocoin::ZerocoinDenominationToAmount(dMint.GetDenomination()))));
         m.push_back(Pair("pubcoinhash", dMint.GetPubcoinHash().GetHex()));
         m.push_back(Pair("serialhash", dMint.GetSerialHash().GetHex()));
         m.push_back(Pair("seedhash", dMint.GetSeedHash().GetHex()));
         m.push_back(Pair("count", (int64_t)dMint.GetCount()));
+        m.push_back(Pair("time", GetTimeMillis() - nTime));
         arrMints.push_back(m);
     }
-    retObj.push_back(Pair("mints", arrMints));
 
-    return retObj;
+    return arrMints;
 }
 
 UniValue spendzerocoin(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() > 2 || params.size() < 1)
+    if (fHelp || params.size() > 5 || params.size() < 3)
         throw std::runtime_error(
-            "spendzerocoin amount ( \"address\" )\n"
+            "spendzerocoin amount mintchange minimizechange ( \"address\" ispublicspend)\n"
             "\nSpend zAZR to a AZR address.\n" +
             HelpRequiringPassphrase() + "\n"
 
             "\nArguments:\n"
             "1. amount          (numeric, required) Amount to spend.\n"
-            "2. \"address\"     (string, optional, default=change) Send to specified address or to a new change address.\n"
+            "2. mintchange      (boolean, required) Re-mint any leftover change.\n"
+            "3. minimizechange  (boolean, required) Try to minimize the returning change  [false]\n"
+            "4. \"address\"     (string, optional, default=change) Send to specified address or to a new change address.\n"
             "                       If there is change then an address is required\n"
+            "5. ispublicspend (boolean, optional, default=true) create a public zc spend instead of use the old code (only for regression tests)"
 
             "\nResult:\n"
             "{\n"
@@ -3475,19 +3476,31 @@ UniValue spendzerocoin(const UniValue& params, bool fHelp)
             "}\n"
 
             "\nExamples\n" +
-            HelpExampleCli("spendzerocoin", "5000 \"AMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\"") +
-            HelpExampleRpc("spendzerocoin", "5000 \"AMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\""));
+            HelpExampleCli("spendzerocoin", "5000 false true \"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\"") +
+            HelpExampleRpc("spendzerocoin", "5000 false true \"DMJRSsuU9zfyrvxVaAEFQqK4MxZg6vgeS6\""));
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     if(sporkManager.IsSporkActive(SPORK_16_ZEROCOIN_MAINTENANCE_MODE))
         throw JSONRPCError(RPC_WALLET_ERROR, "zAZR is currently disabled due to maintenance.");
 
-    CAmount nAmount = AmountFromValue(params[0]);        // Spending amount
-    const std::string address_str = (params.size() > 1 ? params[1].get_str() : "");
+    EnsureWalletIsUnlocked();
+
+    CAmount nAmount = AmountFromValue(params[0]);   // Spending amount
+    bool fMintChange = params[1].get_bool();        // Mint change to zAZR
+    if (fMintChange && Params().NetworkID() != CBaseChainParams::REGTEST)
+        throw JSONRPCError(RPC_WALLET_ERROR, "zAZR minting is DISABLED, cannot mint change");
+    bool fMinimizeChange = params[2].get_bool();    // Minimize change
+    std::string address_str = params.size() > 3 ? params[3].get_str() : "";
+    bool ispublicspend = params.size() > 4 ? params[4].get_bool() : true;
 
     std::vector<CZerocoinMint> vMintsSelected;
-    return DoZazrSpend(nAmount, vMintsSelected, address_str);
+
+    if (!ispublicspend && Params().NetworkID() != CBaseChainParams::REGTEST) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "zAZR old spend only available in regtest for tests purposes");
+    }
+
+    return DoZazrSpend(nAmount, fMintChange, fMinimizeChange, vMintsSelected, address_str, ispublicspend);
 }
 
 
@@ -3535,40 +3548,62 @@ UniValue spendzerocoinmints(const UniValue& params, bool fHelp)
     if(sporkManager.IsSporkActive(SPORK_16_ZEROCOIN_MAINTENANCE_MODE))
         throw JSONRPCError(RPC_WALLET_ERROR, "zAZR is currently disabled due to maintenance.");
 
-    UniValue arrMints = params[0].get_array();
-    const std::string address_str = (params.size() > 1 ? params[1].get_str() : "");
+    std::string address_str = "";
+    if (params.size() > 1) {
+        RPCTypeCheck(params, boost::assign::list_of(UniValue::VARR)(UniValue::VSTR));
+        address_str = params[1].get_str();
+    } else
+        RPCTypeCheck(params, boost::assign::list_of(UniValue::VARR));
 
+    EnsureWalletIsUnlocked();
+
+    UniValue arrMints = params[0].get_array();
     if (arrMints.size() == 0)
         throw JSONRPCError(RPC_WALLET_ERROR, "No zerocoin selected");
+    if (arrMints.size() > 7)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Too many mints included. Maximum zerocoins per spend: 7");
 
-    // check mints supplied and save serial hash (do this here so we don't fetch if any is wrong)
-    std::vector<uint256> vSerialHashes;
-    for(unsigned int i = 0; i < arrMints.size(); i++) {
-        std::string serialHashStr = arrMints[i].get_str();
-        if (!IsHex(serialHashStr))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex serial hash");
-        vSerialHashes.push_back(uint256(serialHashStr));
-    }
+    CAmount nAmount(0);   // Spending amount
 
     // fetch mints and update nAmount
-    CAmount nAmount(0);
     std::vector<CZerocoinMint> vMintsSelected;
-    for(const uint256& serialHash : vSerialHashes) {
+    for(unsigned int i=0; i < arrMints.size(); i++) {
+
         CZerocoinMint mint;
-        if (!pwalletMain->GetMint(serialHash, mint)) {
-            std::string strErr = "Failed to fetch mint associated with serial hash " + serialHash.GetHex();
+        std::string serialHash = arrMints[i].get_str();
+
+        if (!IsHex(serialHash))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex serial hash");
+
+        uint256 hashSerial(serialHash);
+        if (!pwalletMain->GetMint(hashSerial, mint)) {
+            std::string strErr = "Failed to fetch mint associated with serial hash " + serialHash;
             throw JSONRPCError(RPC_WALLET_ERROR, strErr);
         }
+
         vMintsSelected.emplace_back(mint);
         nAmount += mint.GetDenominationAsAmount();
     }
 
-    return DoZazrSpend(nAmount, vMintsSelected, address_str);
+    CBitcoinAddress address = CBitcoinAddress(); // Optional sending address. Dummy initialization here.
+    if (params.size() == 4) {
+        // Destination address was supplied as params[4]. Optional parameters MUST be at the end
+        // to avoid type confusion from the JSON interpreter
+        address = CBitcoinAddress(params[3].get_str());
+        if(!address.IsValid() || address.IsStakingAddress())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid AEZORA address");
+    }
+
+    return DoZazrSpend(nAmount, false, true, vMintsSelected, address_str);
 }
 
 
-extern UniValue DoZazrSpend(const CAmount nAmount, std::vector<CZerocoinMint>& vMintsSelected, std::string address_str)
+extern UniValue DoZazrSpend(const CAmount nAmount, bool fMintChange, bool fMinimizeChange, std::vector<CZerocoinMint>& vMintsSelected, std::string address_str, bool ispublicspend)
 {
+    // zerocoin MINT is disabled. fMintChange should be false here. Double check
+    if (fMintChange && Params().NetworkID() != CBaseChainParams::REGTEST)
+        throw JSONRPCError(RPC_WALLET_ERROR, "zAZR minting is DISABLED, cannot mint change");
+
     int64_t nTimeStart = GetTimeMillis();
     CBitcoinAddress address = CBitcoinAddress(); // Optional sending address. Dummy initialization here.
     CWalletTx wtx;
@@ -3583,8 +3618,7 @@ extern UniValue DoZazrSpend(const CAmount nAmount, std::vector<CZerocoinMint>& v
         outputs.push_back(std::pair<CBitcoinAddress*, CAmount>(&address, nAmount));
     }
 
-    EnsureWalletIsUnlocked();
-    fSuccess = pwalletMain->SpendZerocoin(nAmount, wtx, receipt, vMintsSelected, outputs, nullptr);
+    fSuccess = pwalletMain->SpendZerocoin(nAmount, wtx, receipt, vMintsSelected, fMintChange, fMinimizeChange, outputs, nullptr, ispublicspend);
 
     if (!fSuccess)
         throw JSONRPCError(RPC_WALLET_ERROR, receipt.GetStatusMessage());
@@ -4125,7 +4159,7 @@ UniValue generatemintlist(const UniValue& params, bool fHelp)
     UniValue arrRet(UniValue::VARR);
     for (int i = nCount; i < nCount + nRange; i++) {
         libzerocoin::CoinDenomination denom = libzerocoin::CoinDenomination::ZQ_ONE;
-        libzerocoin::PrivateCoin coin(Params().GetConsensus().Zerocoin_Params(false), denom, false);
+        libzerocoin::PrivateCoin coin(Params().Zerocoin_Params(false), denom, false);
         CDeterministicMint dMint;
         zwallet->GenerateMint(i, denom, coin, dMint);
         UniValue obj(UniValue::VOBJ);
@@ -4240,11 +4274,48 @@ UniValue searchdzazr(const UniValue& params, bool fHelp)
     return "done";
 }
 
+UniValue enableautomintaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw std::runtime_error(
+                "enableautomintaddress enable\n"
+                "\nEnables or disables automint address functionality\n"
+
+                "\nArguments\n"
+                "1. enable     (boolean, required) Enable or disable automint address functionality\n"
+
+                "\nExamples\n" +
+                HelpExampleCli("enableautomintaddress", "true") + HelpExampleRpc("enableautomintaddress", "false"));
+
+    fEnableAutoConvert = params[0].get_bool();
+
+    return NullUniValue;
+}
+
+UniValue createautomintaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw std::runtime_error(
+                "createautomintaddress\n"
+                "\nGenerates new auto mint address\n" +
+                HelpRequiringPassphrase() + "\n"
+
+                "\nResult\n"
+                "\"address\"     (string) AEZORA address for auto minting\n" +
+                HelpExampleCli("createautomintaddress", "") +
+                HelpExampleRpc("createautomintaddress", ""));
+
+    EnsureWalletIsUnlocked();
+    LOCK(pwalletMain->cs_wallet);
+    CBitcoinAddress address = pwalletMain->GenerateNewAutoMintKey();
+    return address.ToString();
+}
+
 UniValue spendrawzerocoin(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 4 || params.size() > 6)
+    if (fHelp || params.size() < 4 || params.size() > 5)
         throw std::runtime_error(
-            "spendrawzerocoin \"serialHex\" denom \"randomnessHex\" \"priv key\" ( \"address\" \"mintTxId\" )\n"
+            "spendrawzerocoin \"serialHex\" denom \"randomnessHex\" [\"address\"]\n"
             "\nCreate and broadcast a TX spending the provided zericoin.\n"
 
             "\nArguments:\n"
@@ -4252,10 +4323,7 @@ UniValue spendrawzerocoin(const UniValue& params, bool fHelp)
             "2. \"randomnessHex\"    (string, required) A zerocoin randomness value (hex)\n"
             "3. denom                (numeric, required) A zerocoin denomination (decimal)\n"
             "4. \"priv key\"         (string, required) The private key associated with this coin (hex)\n"
-            "5. \"address\"          (string, optional) AEZORA address to spend to. If not specified, "
-            "                        or empty string, spend to change address.\n"
-            "6. \"mintTxId\"         (string, optional) txid of the transaction containing the mint. If not"
-            "                        specified, or empty string, the blockchain will be scanned (could take a while)"
+            "5. \"address\"          (string, optional) AEZORA address to spend to. If not specified, spend to change add.\n"
 
             "\nResult:\n"
                 "\"txid\"             (string) The transaction txid in hex\n"
@@ -4284,53 +4352,58 @@ UniValue spendrawzerocoin(const UniValue& params, bool fHelp)
     bool fGood = vchSecret.SetString(priv_key_str);
     CKey key = vchSecret.GetKey();
     if (!key.IsValid() && fGood)
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "privkey is not valid");
+        return JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "privkey is not valid");
     privkey = key.GetPrivKey();
 
+    std::string address_str = "";
+    if (params.size() == 5)
+        address_str = params[4].get_str();
+
     // Create the coin associated with these secrets
-    libzerocoin::PrivateCoin coin(Params().GetConsensus().Zerocoin_Params(false), denom, serial, randomness);
+    libzerocoin::PrivateCoin coin(Params().Zerocoin_Params(false), denom, serial, randomness);
     coin.setPrivKey(privkey);
     coin.setVersion(libzerocoin::PrivateCoin::CURRENT_VERSION);
 
     // Create the mint associated with this coin
     CZerocoinMint mint(denom, coin.getPublicCoin().getValue(), randomness, serial, false, CZerocoinMint::CURRENT_VERSION, &privkey);
-
-    std::string address_str = "";
-    if (params.size() > 4)
-        address_str = params[4].get_str();
-
-    if (params.size() > 5) {
-        // update mint txid
-        mint.SetTxHash(ParseHashV(params[5], "parameter 5"));
-    } else {
-        // If the mint tx is not provided, look for it
-        const CBigNum& mintValue = mint.GetValue();
-        bool found = false;
-        {
-            CBlockIndex* pindex = chainActive.Tip();
-            while (!found && pindex && pindex->nHeight >= Params().GetConsensus().height_start_ZC) {
-                LogPrintf("%s : Checking block %d...\n", __func__, pindex->nHeight);
-                CBlock block;
-                if (!ReadBlockFromDisk(block, pindex))
-                    throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read block from disk");
-                std::list<CZerocoinMint> listMints;
-                BlockToZerocoinMintList(block, listMints, true);
-                for (const CZerocoinMint& m : listMints) {
-                    if (m.GetValue() == mintValue && m.GetDenomination() == denom) {
-                        // mint found. update txid
-                        mint.SetTxHash(m.GetTxHash());
-                        found = true;
-                        break;
-                    }
-                }
-                pindex = pindex->pprev;
-            }
-        }
-        if (!found)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Mint tx not found");
-    }
-
     std::vector<CZerocoinMint> vMintsSelected = {mint};
-    return DoZazrSpend(mint.GetDenominationAsAmount(), vMintsSelected, address_str);
+    CAmount nAmount = mint.GetDenominationAsAmount();
+
+    return DoZazrSpend(nAmount, false, true, vMintsSelected, address_str);
 }
 
+UniValue clearspendcache(const UniValue& params, bool fHelp)
+{
+    if(fHelp || params.size() != 0)
+        throw std::runtime_error(
+            "clearspendcache\n"
+            "\nClear the pre-computed zAZR spend cache, and database.\n" +
+            HelpRequiringPassphrase() + "\n"
+
+            "\nExamples\n" +
+            HelpExampleCli("clearspendcache", "") + HelpExampleRpc("clearspendcache", ""));
+
+    EnsureWalletIsUnlocked();
+
+    CzAZRTracker* zazrTracker = pwalletMain->zazrTracker.get();
+
+    {
+        int nTries = 0;
+        while (nTries < 100) {
+            TRY_LOCK(zazrTracker->cs_spendcache, fLocked);
+            if (fLocked) {
+                if (zazrTracker->ClearSpendCache()) {
+                    fClearSpendCache = true;
+                    CWalletDB walletdb("precomputes.dat", "cr+");
+                    walletdb.EraseAllPrecomputes();
+                    return "Successfully Cleared the Precompute Spend Cache and Database";
+                }
+            } else {
+                fGlobalUnlockSpendCache = true;
+                nTries++;
+                MilliSleep(100);
+            }
+        }
+    }
+    throw JSONRPCError(RPC_WALLET_ERROR, "Error: Spend cache not cleared!");
+}

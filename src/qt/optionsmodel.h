@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2013 The Bitcoin developers
-// Copyright (c) 2017-2020 The AEZORA developers
+// Copyright (c) 2017-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -69,7 +69,7 @@ public:
     /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
     void setDisplayUnit(const QVariant& value);
     /* Update StakeSplitThreshold's value in wallet */
-    void setStakeSplitThreshold(const CAmount value);
+    void setStakeSplitThreshold(int value);
 
     /* Explicit getters */
     bool getMinimizeToTray() { return fMinimizeToTray; }
@@ -119,7 +119,7 @@ private:
     /// Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string& option);
 
-Q_SIGNALS:
+signals:
     void displayUnitChanged(int unit);
     void zeromintEnableChanged(bool);
     void zeromintAddressesChanged(bool);

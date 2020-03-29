@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +27,7 @@ public:
     CFeeRate getFeeRate();
     void clear();
 
-public Q_SLOTS:
+public slots:
     void onRecommendedChecked();
     void onCustomChecked();
     void updateFee();

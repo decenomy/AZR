@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@
 #include "zazrcontroldialog.h"
 #include "qt/aezora/tooltipmenu.h"
 
-static const int MAX_SEND_POPUP_ENTRIES = 80;
+static const int MAX_SEND_POPUP_ENTRIES = 8;
 
 class AEZORAGUI;
 class ClientModel;
@@ -42,11 +42,11 @@ public:
     void loadClientModel() override;
     void loadWalletModel() override;
 
-Q_SIGNALS:
+signals:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString& uri);
 
-public Q_SLOTS:
+public slots:
     void onChangeAddressClicked();
     void onChangeCustomFeeClicked();
     void onCoinControlClicked();
@@ -58,7 +58,7 @@ public Q_SLOTS:
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
-private Q_SLOTS:
+private slots:
     void onAZRSelected(bool _isAZR);
     void onSendClicked();
     void onContactsClicked(SendMultiRow* entry);

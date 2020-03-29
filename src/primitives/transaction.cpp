@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,6 +44,19 @@ CTxIn::CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nS
     prevout = COutPoint(hashPrevTx, nOut);
     scriptSig = scriptSigIn;
     nSequence = nSequenceIn;
+}
+
+CTxIn::CTxIn(const libzerocoin::CoinSpend& spend, libzerocoin::CoinDenomination denom)
+{
+    //Serialize the coinspend object and append it to a CScript
+    CDataStream serializedCoinSpend(SER_NETWORK, PROTOCOL_VERSION);
+    serializedCoinSpend << spend;
+    std::vector<unsigned char> data(serializedCoinSpend.begin(), serializedCoinSpend.end());
+
+    scriptSig = CScript() << OP_ZEROCOINSPEND << data.size();
+    scriptSig.insert(scriptSig.end(), data.begin(), data.end());
+    prevout.SetNull();
+    nSequence = denom;
 }
 
 bool CTxIn::IsZerocoinSpend() const

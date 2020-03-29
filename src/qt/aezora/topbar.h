@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ public:
     void loadClientModel() override;
 
     void encryptWallet();
-public Q_SLOTS:
+public slots:
     void updateBalances(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& zerocoinBalance, const CAmount& unconfirmedZerocoinBalance, const CAmount& immatureZerocoinBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
@@ -44,17 +44,17 @@ public Q_SLOTS:
 
     void setNumConnections(int count);
     void setNumBlocks(int count);
-    void setStakingStatusActive(bool fActive);
+    void updateAutoMintStatus();
     void updateStakingStatus();
 
-Q_SIGNALS:
+signals:
     void themeChanged(bool isLight);
     void walletSynced(bool isSync);
     void onShowHideColdStakingChanged(bool show);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
-private Q_SLOTS:
+private slots:
     void onBtnReceiveClicked();
     void onThemeClicked();
     void onBtnLockClicked();
@@ -73,8 +73,6 @@ private:
     int nDisplayUnit = -1;
     QTimer* timerStakingIcon = nullptr;
     bool isInitializing = true;
-
-    void updateTorIcon();
 };
 
 #endif // TOPBAR_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -58,22 +58,22 @@ void TooltipMenu::setLastBtnVisible(bool visible) {
 
 void TooltipMenu::deleteClicked(){
     hide();
-    Q_EMIT onDeleteClicked();
+    emit onDeleteClicked();
 }
 
 void TooltipMenu::copyClicked(){
     hide();
-    Q_EMIT onCopyClicked();
+    emit onCopyClicked();
 }
 
 void TooltipMenu::editClicked(){
     hide();
-    Q_EMIT onEditClicked();
+    emit onEditClicked();
 }
 
 void TooltipMenu::lastClicked() {
     hide();
-    Q_EMIT onLastClicked();
+    emit onLastClicked();
 }
 
 void TooltipMenu::showEvent(QShowEvent *event){

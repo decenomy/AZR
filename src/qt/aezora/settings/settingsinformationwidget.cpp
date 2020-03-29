@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,12 +32,12 @@ SettingsInformationWidget::SettingsInformationWidget(AEZORAGUI* _window,QWidget 
     ui->labelTitleGeneral->setText(tr("General"));
     ui->labelTitleClient->setText(tr("Client Version: "));
     ui->labelTitleAgent->setText(tr("User Agent:"));
-    ui->labelTitleBerkeley->setText(tr("BerkeleyDB version:"));
+    ui->labelTitleBerkeley->setText(tr("Using BerkeleyDB version:"));
     ui->labelTitleDataDir->setText(tr("Datadir: "));
-    ui->labelTitleTime->setText(tr("Startup time:  "));
+    ui->labelTitleTime->setText(tr("Startup Time:  "));
     ui->labelTitleNetwork->setText(tr("Network"));
     ui->labelTitleName->setText(tr("Name:"));
-    ui->labelTitleConnections->setText(tr("Connections:"));
+    ui->labelTitleConnections->setText(tr("Number Connections:"));
 
     setCssProperty({
         ui->labelTitleDataDir,
@@ -69,13 +69,13 @@ SettingsInformationWidget::SettingsInformationWidget(AEZORAGUI* _window,QWidget 
     },"text-title");
 
     ui->labelTitleBlockchain->setText(tr("Blockchain"));
-    ui->labelTitleBlockNumber->setText(tr("Current number of blocks:"));
+    ui->labelTitleBlockNumber->setText(tr("Current Number of Blocks:"));
     ui->labelTitleBlockTime->setText(tr("Last Block Time:"));
 
     ui->labelTitleMemory->setText(tr("Memory Pool"));
     ui->labelTitleMemory->setVisible(false);
 
-    ui->labelTitleNumberTransactions->setText(tr("Current number of transactions:"));
+    ui->labelTitleNumberTransactions->setText(tr("Current Number of Transactions:"));
     ui->labelTitleNumberTransactions->setVisible(false);
 
     ui->labelInfoNumberTransactions->setText("0");

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,6 @@
 #include "optionsmodel.h"
 #include "pairresult.h"
 #include "activemasternode.h"
-#include "qt/aezora/guitransactionsutils.h"
 #include <QFile>
 #include <QIntValidator>
 #include <QHostAddress>
@@ -207,32 +206,21 @@ bool MasterNodeWizardDialog::createMN(){
 
         prepareStatus = walletModel->prepareTransaction(currentTransaction);
 
-        QString returnMsg = "Unknown error";
         // process prepareStatus and on error generate message shown to user
-        CClientUIInterface::MessageBoxFlags informType;
-        returnMsg = GuiTransactionsUtils::ProcessSendCoinsReturn(
-                this,
-                prepareStatus,
-                walletModel,
-                informType, // this flag is not needed
-                BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(),
-                                             currentTransaction.getTransactionFee()),
-                true
+        processSendCoinsReturn(prepareStatus,
+                               BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(),
+                                                            currentTransaction.getTransactionFee()),
+                               true
         );
 
         if (prepareStatus.status != WalletModel::OK) {
-            returnStr = tr("Prepare master node failed.\n\n%1\n").arg(returnMsg);
+            returnStr = tr("Prepare master node failed..");
             return false;
         }
 
         WalletModel::SendCoinsReturn sendStatus = walletModel->sendCoins(currentTransaction);
         // process sendStatus and on error generate message shown to user
-        returnMsg = GuiTransactionsUtils::ProcessSendCoinsReturn(
-                this,
-                sendStatus,
-                walletModel,
-                informType
-        );
+        processSendCoinsReturn(sendStatus);
 
         if (sendStatus.status == WalletModel::OK) {
             // now change the conf
@@ -298,7 +286,7 @@ bool MasterNodeWizardDialog::createMN(){
                     }
                 }
                 if (indexOut == -1) {
-                    returnStr = tr("Invalid collateral output index");
+                    returnStr = tr("Invalid collaterall output index");
                     return false;
                 }
                 std::string indexOutStr = std::to_string(indexOut);
@@ -335,8 +323,6 @@ bool MasterNodeWizardDialog::createMN(){
             } else{
                 returnStr = tr("masternode.conf file doesn't exists");
             }
-        } else {
-            returnStr = tr("Cannot send collateral transaction.\n\n%1").arg(returnMsg);
         }
     }
     return false;
@@ -371,6 +357,73 @@ void MasterNodeWizardDialog::onBackClicked(){
             break;
         }
     }
+}
+
+void MasterNodeWizardDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn& sendCoinsReturn, const QString& msgArg, bool fPrepare)
+{
+    bool fAskForUnlock = false;
+
+    QPair<QString, CClientUIInterface::MessageBoxFlags> msgParams;
+    // Default to a warning message, override if error message is needed
+    msgParams.second = CClientUIInterface::MSG_WARNING;
+
+    // This comment is specific to SendCoinsDialog usage of WalletModel::SendCoinsReturn.
+    // WalletModel::TransactionCommitFailed is used only in WalletModel::sendCoins()
+    // all others are used only in WalletModel::prepareTransaction()
+    switch (sendCoinsReturn.status) {
+        case WalletModel::InvalidAddress:
+            msgParams.first = tr("The recipient address is not valid, please recheck.");
+            break;
+        case WalletModel::InvalidAmount:
+            msgParams.first = tr("The amount to pay must be larger than 0.");
+            break;
+        case WalletModel::AmountExceedsBalance:
+            msgParams.first = tr("The amount exceeds your balance.");
+            break;
+        case WalletModel::AmountWithFeeExceedsBalance:
+            msgParams.first = tr("The total exceeds your balance when the %1 transaction fee is included.").arg(msgArg);
+            break;
+        case WalletModel::DuplicateAddress:
+            msgParams.first = tr("Duplicate address found, can only send to each address once per send operation.");
+            break;
+        case WalletModel::TransactionCreationFailed:
+            msgParams.first = tr("Transaction creation failed!");
+            msgParams.second = CClientUIInterface::MSG_ERROR;
+            break;
+        case WalletModel::TransactionCommitFailed:
+            msgParams.first = tr("The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+            msgParams.second = CClientUIInterface::MSG_ERROR;
+            break;
+        case WalletModel::AnonymizeOnlyUnlocked:
+            // Unlock is only need when the coins are send
+            if(!fPrepare)
+                fAskForUnlock = true;
+            else
+                msgParams.first = tr("Error: The wallet was unlocked only to anonymize coins.");
+            break;
+
+        case WalletModel::InsaneFee:
+            msgParams.first = tr("A fee %1 times higher than %2 per kB is considered an insanely high fee.").arg(10000).arg(BitcoinUnits::formatWithUnit(walletModel->getOptionsModel()->getDisplayUnit(), ::minRelayTxFee.GetFeePerK()));
+            break;
+            // included to prevent a compiler warning.
+        case WalletModel::OK:
+        default:
+            return;
+    }
+
+    // Unlock wallet if it wasn't fully unlocked already
+    if(fAskForUnlock) {
+        walletModel->requestUnlock(AskPassphraseDialog::Context::Unlock_Full, false);
+        if(walletModel->getEncryptionStatus () != WalletModel::Unlocked) {
+            msgParams.first = tr("Error: The wallet was unlocked only to anonymize coins. Unlock canceled.");
+        }
+        else {
+            // Wallet unlocked
+            return;
+        }
+    }
+
+    inform(msgParams.first);
 }
 
 void MasterNodeWizardDialog::inform(QString text){

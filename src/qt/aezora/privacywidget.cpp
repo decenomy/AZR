@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 #include "optionsmodel.h"
 #include "coincontroldialog.h"
 #include "coincontrol.h"
+#include "zazr/accumulators.h"
 
 #define DECORATION_SIZE 65
 #define NUM_ITEMS 3
@@ -101,7 +102,7 @@ PrivacyWidget::PrivacyWidget(AEZORAGUI* parent) :
     ui->layoutDenom->setVisible(false);
 
     // List
-    ui->labelListHistory->setText(tr("Last zAZR Movements"));
+    ui->labelListHistory->setText(tr("Last Zerocoin Movements"));
     setCssProperty(ui->labelListHistory, "text-title");
 
     //ui->emptyContainer->setVisible(false);
@@ -130,7 +131,7 @@ PrivacyWidget::PrivacyWidget(AEZORAGUI* parent) :
     ui->btnRescanMints->setTitleClassAndText("btn-title-grey", "Rescan Mints");
     ui->btnRescanMints->setSubTitleClassAndText("text-subtitle", "Find mints in the blockchain.");
 
-    ui->btnResetZerocoin->setTitleClassAndText("btn-title-grey", "Reset Spent zAZR");
+    ui->btnResetZerocoin->setTitleClassAndText("btn-title-grey", "Reset Zerocoin");
     ui->btnResetZerocoin->setSubTitleClassAndText("text-subtitle", "Reset zerocoin database.");
 
     connect(ui->btnTotalzAZR, SIGNAL(clicked()), this, SLOT(onTotalZazrClicked()));
@@ -157,9 +158,6 @@ PrivacyWidget::PrivacyWidget(AEZORAGUI* parent) :
     ui->listView->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listView->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui->listView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->listView->setLayoutMode(QListView::LayoutMode::Batched);
-    ui->listView->setBatchSize(30);
-    ui->listView->setUniformItemSizes(true);
 }
 
 void PrivacyWidget::loadWalletModel(){
@@ -285,10 +283,14 @@ void PrivacyWidget::mint(CAmount value){
 void PrivacyWidget::spend(CAmount value){
     CZerocoinSpendReceipt receipt;
     std::vector<CZerocoinMint> selectedMints;
+    bool mintChange = false;
+    bool minimizeChange = false;
 
     if(!walletModel->convertBackZazr(
             value,
             selectedMints,
+            mintChange,
+            minimizeChange,
             receipt
     )){
         inform(receipt.GetStatusMessage().data());
@@ -334,7 +336,7 @@ void PrivacyWidget::onRescanMintsClicked(){
 }
 
 void PrivacyWidget::onResetZeroClicked(){
-    if (ask(tr("Reset Spent zAZR"),
+    if (ask(tr("Reset Spent Zerocoins"),
         tr("Your zerocoin spends are going to be scanned from the blockchain from scratch"))
     ){
         std::string strResetMintResult = walletModel->resetSpentZerocoin();
@@ -354,17 +356,19 @@ void PrivacyWidget::updateDenomsSupply(){
 
     std::set<CMintMeta> vMints;
     walletModel->listZerocoinMints(vMints, true, false, true, true);
-    const int nRequiredConfs = Params().GetConsensus().ZC_MinMintConfirmations;
 
+    std::map<libzerocoin::CoinDenomination, int> mapMaturityHeights = GetMintMaturityHeight();
     for (auto& meta : vMints){
         // All denominations
         mapDenomBalances.at(meta.denom)++;
 
-        if (!meta.nHeight || chainActive.Height() - meta.nHeight <= nRequiredConfs) {
+        if (!meta.nHeight || chainActive.Height() - meta.nHeight <= Params().Zerocoin_MintRequiredConfirmations()) {
             // All unconfirmed denominations
             mapUnconfirmed.at(meta.denom)++;
         } else {
             if (meta.denom == libzerocoin::CoinDenomination::ZQ_ERROR) {
+                mapImmature.at(meta.denom)++;
+            } else if (meta.nHeight >= mapMaturityHeights.at(meta.denom)) {
                 mapImmature.at(meta.denom)++;
             }
         }

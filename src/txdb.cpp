@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2016-2020 The AEZORA developers
+// Copyright (c) 2016-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,7 @@
 #include "main.h"
 #include "pow.h"
 #include "uint256.h"
+#include "zazr/accumulators.h"
 
 #include <stdint.h>
 
@@ -216,6 +217,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
     pcursor->Seek(ssKeySet.str());
 
     // Load mapBlockIndex
+    uint256 nPreviousCheckpoint;
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
@@ -232,6 +234,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 // Construct block index object
                 CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
                 pindexNew->pprev = InsertBlockIndex(diskindex.hashPrev);
+                pindexNew->pnext = InsertBlockIndex(diskindex.hashNext);
                 pindexNew->nHeight = diskindex.nHeight;
                 pindexNew->nFile = diskindex.nFile;
                 pindexNew->nDataPos = diskindex.nDataPos;
@@ -247,15 +250,33 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 //zerocoin
                 pindexNew->nAccumulatorCheckpoint = diskindex.nAccumulatorCheckpoint;
                 pindexNew->mapZerocoinSupply = diskindex.mapZerocoinSupply;
+                pindexNew->vMintDenominationsInBlock = diskindex.vMintDenominationsInBlock;
 
                 //Proof Of Stake
+                pindexNew->nMint = diskindex.nMint;
                 pindexNew->nMoneySupply = diskindex.nMoneySupply;
                 pindexNew->nFlags = diskindex.nFlags;
-                pindexNew->vStakeModifier = diskindex.vStakeModifier;
+                if (!Params().IsStakeModifierV2(pindexNew->nHeight)) {
+                    pindexNew->nStakeModifier = diskindex.nStakeModifier;
+                } else {
+                    pindexNew->nStakeModifierV2 = diskindex.nStakeModifierV2;
+                }
+                pindexNew->prevoutStake = diskindex.prevoutStake;
+                pindexNew->nStakeTime = diskindex.nStakeTime;
+                pindexNew->hashProofOfStake = diskindex.hashProofOfStake;
 
-                if (pindexNew->nHeight <= Params().GetConsensus().height_last_PoW) {
+                if (pindexNew->nHeight <= Params().LAST_POW_BLOCK()) {
                     if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits))
                         return error("LoadBlockIndex() : CheckProofOfWork failed: %s", pindexNew->ToString());
+                }
+
+                //populate accumulator checksum map in memory
+                if(pindexNew->nAccumulatorCheckpoint != 0 && pindexNew->nAccumulatorCheckpoint != nPreviousCheckpoint) {
+                    //Don't load any checkpoints that exist before v2 zazr. The accumulator is invalid for v1 and not used.
+                    if (pindexNew->nHeight >= Params().Zerocoin_Block_V2_Start())
+                        LoadAccumulatorValuesFromDB(pindexNew->nAccumulatorCheckpoint);
+
+                    nPreviousCheckpoint = pindexNew->nAccumulatorCheckpoint;
                 }
 
                 pcursor->Next();
@@ -388,57 +409,19 @@ bool CZerocoinDB::WipeCoins(std::string strType)
     return true;
 }
 
-
-// Legacy Zerocoin Database
-static const char LZC_ACCUMCS = 'A';
-
-bool CZerocoinDB::WriteAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, const int nHeight)
+bool CZerocoinDB::WriteAccumulatorValue(const uint32_t& nChecksum, const CBigNum& bnValue)
 {
-    return Write(std::make_pair(LZC_ACCUMCS, std::make_pair(nChecksum, denom)), nHeight);
+    LogPrint("zero","%s : checksum:%d val:%s\n", __func__, nChecksum, bnValue.GetHex());
+    return Write(std::make_pair('2', nChecksum), bnValue);
 }
 
-bool CZerocoinDB::ReadAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, int& nHeightRet)
+bool CZerocoinDB::ReadAccumulatorValue(const uint32_t& nChecksum, CBigNum& bnValue)
 {
-    return Read(std::make_pair(LZC_ACCUMCS, std::make_pair(nChecksum, denom)), nHeightRet);
+    return Read(std::make_pair('2', nChecksum), bnValue);
 }
 
-bool CZerocoinDB::EraseAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom)
+bool CZerocoinDB::EraseAccumulatorValue(const uint32_t& nChecksum)
 {
-    return Erase(std::make_pair(LZC_ACCUMCS, std::make_pair(nChecksum, denom)));
-}
-
-bool CZerocoinDB::WipeAccChecksums()
-{
-    boost::scoped_ptr<leveldb::Iterator> pcursor(NewIterator());
-    CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-    ssKeySet << std::make_pair(LZC_ACCUMCS, (uint32_t) 0);
-    pcursor->Seek(ssKeySet.str());
-    std::set<uint32_t> setDelete;
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-            leveldb::Slice slKey = pcursor->key();
-            CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
-            char chType;
-            ssKey >> chType;
-            if (chType == LZC_ACCUMCS) {
-                leveldb::Slice slValue = pcursor->value();
-                CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-                uint32_t acs;
-                ssValue >> acs;
-                setDelete.insert(acs);
-                pcursor->Next();
-            } else break;
-        } catch (const std::exception& e) {
-            return error("%s : Deserialize or I/O error - %s", __func__, e.what());
-        }
-    }
-
-    for (auto& acs : setDelete) {
-        if (!Erase(std::make_pair(LZC_ACCUMCS, acs)))
-            LogPrintf("%s: error failed to acc checksum %s\n", __func__, acs);
-    }
-
-    LogPrintf("%s: AccChecksum database removed.\n", __func__);
-    return true;
+    LogPrint("zero", "%s : checksum:%d\n", __func__, nChecksum);
+    return Erase(std::make_pair('2', nChecksum));
 }

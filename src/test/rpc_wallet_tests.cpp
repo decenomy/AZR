@@ -1,5 +1,5 @@
 // Copyright (c) 2013-2014 The Bitcoin Core developers
-// Copyright (c) 2017-2020 The AEZORA developers
+// Copyright (c) 2017-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     CBitcoinAddress demoAddress = CBitcoinAddress(CTxDestination(demoPubkey.GetID()));
     UniValue retValue;
     std::string strAccount = "walletDemoAccount";
-    std::string strPurpose = AddressBook::AddressBookPurpose::RECEIVE;
+    std::string strPurpose = "receive";
     BOOST_CHECK_NO_THROW({ /*Initialize Wallet with an account */
         CWalletDB walletdb(pwalletMain->strWalletFile);
         CAccount account;

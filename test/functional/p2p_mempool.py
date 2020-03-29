@@ -9,10 +9,10 @@ filters are not enabled.
 """
 
 from test_framework.mininode import *
-from test_framework.test_framework import AezoraTestFramwork
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class P2PMempoolTests(AezoraTestFramwork):
+class P2PMempoolTests(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

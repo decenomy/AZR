@@ -19,8 +19,7 @@ else
 LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
-BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
-BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
@@ -100,12 +99,7 @@ BITCOIN_CORE_H = \
   compat/endian.h \
   compat/sanity.h \
   compressor.h \
-  consensus/consensus.h \
   consensus/merkle.h \
-  consensus/validation.h \
-  consensus/tx_verify.h \
-  consensus/zerocoin_verify.h \
-  consensus/params.h \
   primitives/block.h \
   primitives/transaction.h \
   core_io.h \
@@ -177,8 +171,6 @@ BITCOIN_CORE_H = \
   uint256.h \
   undo.h \
   util.h \
-  util/macros.h \
-  util/threadnames.h \
   utilstrencodings.h \
   utilmoneystr.h \
   utiltime.h \
@@ -188,13 +180,20 @@ BITCOIN_CORE_H = \
   wallet/wallet_ismine.h \
   wallet/walletdb.h \
   zazrchain.h \
+  zazr/accumulators.h \
+  zazr/accumulatorcheckpoints.h \
+  zazr/accumulatorcheckpoints.json.h \
+  zazr/accumulatormap.h \
   zazr/deterministicmint.h \
   zazr/mintpool.h \
+  zazr/witness.h \
   zazr/zerocoin.h \
   zazr/zazrtracker.h \
   zazr/zazrwallet.h \
   zazr/zazrmodule.h \
-  zazr/zpos.h \
+  genwit.h \
+  concurrentqueue.h \
+  lightzazrthread.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h \
   zmq/zmqnotificationinterface.h \
@@ -216,8 +215,6 @@ libbitcoin_server_a_SOURCES = \
   blocksignature.cpp \
   chain.cpp \
   checkpoints.cpp \
-  consensus/tx_verify.cpp \
-  consensus/zerocoin_verify.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -282,16 +279,18 @@ libbitcoin_wallet_a_SOURCES = \
   kernel.cpp \
   wallet/wallet.cpp \
   wallet/wallet_ismine.cpp \
-  wallet/wallet_zerocoin.cpp \
   wallet/walletdb.cpp \
   zazr/deterministicmint.cpp \
   zazr/zerocoin.cpp \
+  zazr/accumulators.cpp \
   zazr/mintpool.cpp \
+  zazr/witness.cpp \
   zazr/zazrwallet.cpp \
   zazr/zazrtracker.cpp \
   stakeinput.cpp \
+  genwit.cpp \
   zazr/zazrmodule.cpp \
-  zazr/zpos.cpp \
+  lightzazrthread.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -337,6 +336,7 @@ libzerocoin_libbitcoin_zerocoin_a_CPPFLAGS = $(AM_CPPFLAGS) $(BOOST_CPPFLAGS)
 libzerocoin_libbitcoin_zerocoin_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libzerocoin_libbitcoin_zerocoin_a_SOURCES = \
   libzerocoin/Accumulator.h \
+  libzerocoin/AccumulatorProofOfKnowledge.h \
   libzerocoin/bignum.h \
   libzerocoin/Coin.h \
   libzerocoin/CoinRandomnessSchnorrSignature.h \
@@ -345,16 +345,20 @@ libzerocoin_libbitcoin_zerocoin_a_SOURCES = \
   libzerocoin/Denominations.h \
   libzerocoin/ParamGeneration.h \
   libzerocoin/Params.h \
+  libzerocoin/SerialNumberSignatureOfKnowledge.h \
   libzerocoin/SpendType.h \
   libzerocoin/ZerocoinDefines.h \
   libzerocoin/bignum.cpp \
   libzerocoin/Accumulator.cpp \
+  libzerocoin/AccumulatorProofOfKnowledge.cpp \
   libzerocoin/Coin.cpp \
   libzerocoin/CoinRandomnessSchnorrSignature.cpp \
   libzerocoin/CoinSpend.cpp \
+  libzerocoin/Commitment.cpp \
   libzerocoin/Denominations.cpp \
   libzerocoin/ParamGeneration.cpp \
-  libzerocoin/Params.cpp
+  libzerocoin/Params.cpp \
+  libzerocoin/SerialNumberSignatureOfKnowledge.cpp
 if USE_NUM_GMP
   libzerocoin_libbitcoin_zerocoin_a_SOURCES += libzerocoin/bignum_gmp.cpp
 endif
@@ -366,6 +370,9 @@ endif
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
+  zazr/accumulators.cpp \
+  zazr/accumulatorcheckpoints.cpp \
+  zazr/accumulatormap.cpp \
   allocators.cpp \
   amount.cpp \
   base58.cpp \
@@ -416,7 +423,6 @@ libbitcoin_util_a_SOURCES = \
   uint256.cpp \
   util.cpp \
   utilmoneystr.cpp \
-  util/threadnames.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)
@@ -537,7 +543,6 @@ CLEANFILES = $(EXTRA_LIBRARIES)
 
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
-CLEANFILES += consensus/*.gcda consensus/*.gcno
 CLEANFILES += crypto/*.gcda crypto/*.gcno
 CLEANFILES += libzerocoin/*.gcda libzerocoin/*.gcno
 CLEANFILES += primitives/*.gcda primitives/*.gcno

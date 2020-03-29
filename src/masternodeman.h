@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,10 +51,10 @@ class CMasternodeMan
 {
 private:
     // critical section to protect the inner data structures
-    mutable RecursiveMutex cs;
+    mutable CCriticalSection cs;
 
     // critical section to protect the inner data structures specifically on messaging
-    mutable RecursiveMutex cs_process_message;
+    mutable CCriticalSection cs_process_message;
 
     // map to hold all MNs
     std::vector<CMasternode> vMasternodes;

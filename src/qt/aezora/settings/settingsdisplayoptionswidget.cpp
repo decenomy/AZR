@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -111,7 +111,7 @@ void SettingsDisplayOptionsWidget::initLanguages(){
     QDir translations(":translations");
     QString defaultStr = QString("(") + tr("default") + QString(")");
     ui->comboBoxLanguage->addItem(defaultStr, QVariant(""));
-    Q_FOREACH (const QString& langStr, translations.entryList()) {
+    foreach (const QString& langStr, translations.entryList()) {
         QLocale locale(langStr);
 
         /** check if the locale name consists of 2 parts (language_country) */

@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2016 The Dash developers
-// Copyright (c) 2016-2020 The AEZORA developers
+// Copyright (c) 2016-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -104,7 +104,7 @@ void CSporkManager::ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStr
 
         // reject old signatures 600 blocks after hard-fork
         if (spork.nMessVersion != MessageVersion::MESS_VER_HASH) {
-            if (Params().GetConsensus().IsMessSigV2(nChainHeight - 600)) {
+            if (Params().NewSigsActive(nChainHeight - 600)) {
                 LogPrintf("%s : nMessVersion=%d not accepted anymore at block %d\n", __func__, spork.nMessVersion, nChainHeight);
                 return;
             }
@@ -112,34 +112,31 @@ void CSporkManager::ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStr
 
 
         uint256 hash = spork.GetHash();
-        std::string sporkName = sporkManager.GetSporkNameByID(spork.nSporkID);
         {
             LOCK(cs);
             if (mapSporksActive.count(spork.nSporkID)) {
                 // spork is active
                 if (mapSporksActive[spork.nSporkID].nTimeSigned >= spork.nTimeSigned) {
                     // spork in memory has been signed more recently
-                    LogPrintf("%s : spork %d (%s) in memory is more recent: %d >= %d\n", __func__,
-                            spork.nSporkID, sporkName,
-                            mapSporksActive[spork.nSporkID].nTimeSigned, spork.nTimeSigned);
+                    if (fDebug) LogPrintf("%s : seen %s block %d \n", __func__, hash.ToString(), nChainHeight);
                     return;
                 } else {
                     // update active spork
-                    LogPrintf("%s : got updated spork %d (%s) with value %d (signed at %d) - block %d \n", __func__,
-                            spork.nSporkID, sporkName, spork.nValue, spork.nTimeSigned, nChainHeight);
+                    if (fDebug) LogPrintf("%s : got updated spork %s block %d \n", __func__, hash.ToString(), nChainHeight);
                 }
             } else {
                 // spork is not active
-                LogPrintf("%s : got new spork %d (%s) with value %d (signed at %d) - block %d \n", __func__,
-                        spork.nSporkID, sporkName, spork.nValue, spork.nTimeSigned, nChainHeight);
+                if (fDebug) LogPrintf("%s : got new spork %s block %d \n", __func__, hash.ToString(), nChainHeight);
             }
         }
 
-        const bool fRequireNew = spork.nTimeSigned >= Params().GetConsensus().nTime_EnforceNewSporkKey;
+        LogPrintf("%s : new %s ID %d Time %d bestHeight %d\n", __func__, hash.ToString(), spork.nSporkID, spork.nValue, nChainHeight);
+
+        const bool fRequireNew = spork.nTimeSigned >= Params().NewSporkStart();
         bool fValidSig = spork.CheckSignature();
         if (!fValidSig && !fRequireNew) {
             // See if window is open that allows for old spork key to sign messages
-            if (GetAdjustedTime() < Params().GetConsensus().nTime_RejectOldSporkKey) {
+            if (GetAdjustedTime() < Params().RejectOldSporkKey()) {
                 CPubKey pubkeyold = spork.GetPublicKeyOld();
                 fValidSig = spork.CheckSignature(pubkeyold);
             }
@@ -247,11 +244,11 @@ bool CSporkManager::SetPrivKey(std::string strPrivKey)
 
     spork.Sign(strPrivKey, true);
 
-    const bool fRequireNew = GetTime() >= Params().GetConsensus().nTime_EnforceNewSporkKey;
+    const bool fRequireNew = GetTime() >= Params().NewSporkStart();
     bool fValidSig = spork.CheckSignature();
     if (!fValidSig && !fRequireNew) {
         // See if window is open that allows for old spork key to sign messages
-        if (GetAdjustedTime() < Params().GetConsensus().nTime_RejectOldSporkKey) {
+        if (GetAdjustedTime() < Params().RejectOldSporkKey()) {
             CPubKey pubkeyold = spork.GetPublicKeyOld();
             fValidSig = spork.CheckSignature(pubkeyold);
         }
@@ -292,12 +289,12 @@ std::string CSporkMessage::GetStrMessage() const
 
 const CPubKey CSporkMessage::GetPublicKey(std::string& strErrorRet) const
 {
-    return CPubKey(ParseHex(Params().GetConsensus().strSporkPubKey));
+    return CPubKey(ParseHex(Params().SporkPubKey()));
 }
 
 const CPubKey CSporkMessage::GetPublicKeyOld() const
 {
-    return CPubKey(ParseHex(Params().GetConsensus().strSporkPubKeyOld));
+    return CPubKey(ParseHex(Params().SporkPubKeyOld()));
 }
 
 void CSporkMessage::Relay()

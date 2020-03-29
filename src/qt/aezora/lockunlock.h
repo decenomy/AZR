@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,7 +27,7 @@ public:
     void updateStatus(WalletModel::EncryptionStatus status);
     int lock = 0;
     bool isHovered();
-Q_SIGNALS:
+signals:
     void Mouse_Entered();
     void Mouse_Leave();
 
@@ -36,7 +36,7 @@ protected:
     virtual void enterEvent(QEvent *);
     virtual void leaveEvent(QEvent *);
 
-public Q_SLOTS:
+public slots:
     void onLockClicked();
     void onUnlockClicked();
     void onStakingClicked();

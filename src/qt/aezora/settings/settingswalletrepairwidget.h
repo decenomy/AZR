@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,11 +23,11 @@ public:
     /** Build parameter list for restart */
     void buildParameterlist(QString arg);
 
-Q_SIGNALS:
+signals:
     /** Get restart command-line parameters and handle restart */
     void handleRestart(QStringList args);
 
-public Q_SLOTS:
+public slots:
     void walletSalvage();
     void walletRescan();
     void walletZaptxes1();

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,10 +57,10 @@ public:
     void resizeEvent(QResizeEvent *event) override;
     void showHide(bool show);
     int getNavWidth();
-Q_SIGNALS:
+signals:
     void themeChanged(bool isLightTheme, QString& theme);
     void windowResizeEvent(QResizeEvent* event);
-public Q_SLOTS:
+public slots:
     void changeTheme(bool isLightTheme);
     void goToDashboard();
     void goToSend();
@@ -162,7 +162,7 @@ private:
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
 
-private Q_SLOTS:
+private slots:
     /** Show window if hidden, unminimize when minimized, rise when obscured or show if hidden and fToggleHidden is true */
     void showNormalIfMinimized(bool fToggleHidden = false);
 
@@ -177,7 +177,7 @@ private Q_SLOTS:
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
 #endif
 
-Q_SIGNALS:
+signals:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString& uri);
     /** Restart handling */

@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2018 The Dash Core developers
-// Copyright (c) 2018-2020 The AEZORA developers
+// Copyright (c) 2018-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -140,15 +140,15 @@ bool CSignedMessage::CheckSignature(const CPubKey& pubKey) const
     return true;
 }
 
-bool CSignedMessage::CheckSignature() const
+bool CSignedMessage::CheckSignature(const bool fSignatureCheck) const
 {
     std::string strError = "";
 
     const CPubKey pubkey = GetPublicKey(strError);
     if (pubkey == CPubKey())
-        return error("%s : %s", __func__, strError);
+        return error("%s : ERROR: %s", __func__, strError);
 
-    return CheckSignature(pubkey);
+    return !fSignatureCheck || CheckSignature(pubkey);
 }
 
 const CPubKey CSignedMessage::GetPublicKey(std::string& strErrorRet) const

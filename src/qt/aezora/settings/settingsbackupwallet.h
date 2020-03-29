@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ public:
     explicit SettingsBackupWallet(AEZORAGUI* _window, QWidget *parent = nullptr);
     ~SettingsBackupWallet();
 
-private Q_SLOTS:
+private slots:
     void backupWallet();
     void selectFileOutput();
     void changePassphrase();

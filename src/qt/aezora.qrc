@@ -62,7 +62,9 @@
         <file alias="browse">res/icons/browse.png</file>
         <file alias="staking_active">res/icons/staking_active.png</file>
         <file alias="staking_inactive">res/icons/staking_inactive.png</file>
+        <file alias="automint_active">res/icons/automint_active.png</file>
         <file alias="explorer">res/icons/explorer.png</file>
+        <file alias="automint_inactive">res/icons/automint_inactive.png</file>
         <file alias="yesvote">res/icons/yesvote.png</file>
         <file alias="novote">res/icons/novote.png</file>
         <file alias="abstainvote">res/icons/abstainvote.png</file>
@@ -168,8 +170,6 @@
         <file alias="ic-check-box-liliac-indeterminate">aezora/res/img/ic-check-box-liliac-indeterminate.svg</file>
         <file alias="ic-check-connect-off">aezora/res/img/ic-check-connect-off.svg</file>
         <file alias="ic-check-connect">aezora/res/img/ic-check-connect.svg</file>
-        <file alias="ic-check-tor-off">aezora/res/img/ic-check-tor-off.svg</file>
-        <file alias="ic-check-tor">aezora/res/img/ic-check-tor.svg</file>
         <file alias="ic-check-dark">aezora/res/img/ic-check-dark.svg</file>
         <file alias="ic-check-liliac-on">aezora/res/img/ic-check-liliac-on.svg</file>
         <file alias="ic-check-locked-off">aezora/res/img/ic-check-locked-off.svg</file>

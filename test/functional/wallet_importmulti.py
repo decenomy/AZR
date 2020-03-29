@@ -3,10 +3,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importmulti RPC."""
-from test_framework.test_framework import AezoraTestFramwork
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class ImportMultiTest (AezoraTestFramwork):
+class ImportMultiTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [["-addresstype=legacy"], ["-addresstype=legacy"]]

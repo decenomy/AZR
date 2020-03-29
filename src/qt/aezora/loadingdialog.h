@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,9 +23,9 @@ public:
     ~Worker(){
         runnable = nullptr;
     }
-public Q_SLOTS:
+public slots:
     void process();
-Q_SIGNALS:
+signals:
     void finished();
     void error(QString err, int type);
 
@@ -45,7 +45,7 @@ public:
 
     void execute(Runnable *runnable, int type);
 
-public Q_SLOTS:
+public slots:
     void finished();
     void loadingTextChange();
 

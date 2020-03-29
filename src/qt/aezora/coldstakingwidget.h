@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,10 +48,10 @@ public:
     void run(int type) override;
     void onError(QString error, int type) override;
 
-public Q_SLOTS:
+public slots:
     void walletSynced(bool sync);
 
-private Q_SLOTS:
+private slots:
     void changeTheme(bool isLightTheme, QString &theme) override;
     void handleAddressClicked(const QModelIndex &index);
     void handleMyColdAddressClicked(const QModelIndex &rIndex);
@@ -89,7 +89,6 @@ private:
     QSpacerItem *spacerDiv = nullptr;
 
     bool isInDelegation = true;
-    bool isStakingAddressListVisible = false;
 
     ContactsDropdown *menuContacts = nullptr;
     TooltipMenu* menu = nullptr;

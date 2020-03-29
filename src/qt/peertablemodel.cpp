@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2013 The Bitcoin developers
-// Copyright (c) 2017-2020 The AEZORA developers
+// Copyright (c) 2017-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,8 +11,6 @@
 
 #include "net.h"
 #include "sync.h"
-
-#include <algorithm>
 
 #include <QDebug>
 #include <QList>
@@ -63,7 +61,7 @@ public:
             cachedNodeStats.clear();
 
             cachedNodeStats.reserve(vNodes.size());
-            Q_FOREACH (CNode* pnode, vNodes) {
+            foreach (CNode* pnode, vNodes) {
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
                 stats.nodeStateStats.nSyncHeight = -1;
@@ -85,12 +83,12 @@ public:
 
         if (sortColumn >= 0)
             // sort cacheNodeStats (use stable sort to prevent rows jumping around unneceesarily)
-            std::stable_sort(cachedNodeStats.begin(), cachedNodeStats.end(), NodeLessThan(sortColumn, sortOrder));
+            qStableSort(cachedNodeStats.begin(), cachedNodeStats.end(), NodeLessThan(sortColumn, sortOrder));
 
         // build index map
         mapNodeRows.clear();
         int row = 0;
-        Q_FOREACH (const CNodeCombinedStats& stats, cachedNodeStats)
+        foreach (const CNodeCombinedStats& stats, cachedNodeStats)
             mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 
@@ -212,9 +210,9 @@ const CNodeCombinedStats* PeerTableModel::getNodeStats(int idx)
 
 void PeerTableModel::refresh()
 {
-    Q_EMIT layoutAboutToBeChanged();
+    emit layoutAboutToBeChanged();
     priv->refreshPeers();
-    Q_EMIT layoutChanged();
+    emit layoutChanged();
 }
 
 int PeerTableModel::getRowByNodeId(NodeId nodeid)

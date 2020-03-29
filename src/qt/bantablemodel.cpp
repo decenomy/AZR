@@ -12,8 +12,6 @@
 #include "sync.h"
 #include "utiltime.h"
 
-#include <algorithm>
-
 #include <QDebug>
 #include <QList>
 
@@ -65,7 +63,7 @@ public:
 
         if (sortColumn >= 0)
             // sort cachedBanlist (use stable sort to prevent rows jumping around unneceesarily)
-            std::stable_sort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
+            qStableSort(cachedBanlist.begin(), cachedBanlist.end(), BannedNodeLessThan(sortColumn, sortOrder));
     }
 
     int size() const

@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,9 @@
 #include "masternode.h"
 
 
-extern RecursiveMutex cs_vecPayments;
-extern RecursiveMutex cs_mapMasternodeBlocks;
-extern RecursiveMutex cs_mapMasternodePayeeVotes;
+extern CCriticalSection cs_vecPayments;
+extern CCriticalSection cs_mapMasternodeBlocks;
+extern CCriticalSection cs_mapMasternodePayeeVotes;
 
 class CMasternodePayments;
 class CMasternodePaymentWinner;

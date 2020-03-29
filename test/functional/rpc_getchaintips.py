@@ -10,10 +10,10 @@
 - verify that getchaintips now returns two chain tips.
 """
 
-from test_framework.test_framework import AezoraTestFramwork
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
-class GetChainTipsTest (AezoraTestFramwork):
+class GetChainTipsTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
 

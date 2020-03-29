@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,6 @@
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
-#include "util/threadnames.h"
 
 #include <exception>
 #include <map>
@@ -37,6 +36,11 @@ extern bool fMasterNode;
 extern bool fLiteMode;
 extern bool fEnableSwiftTX;
 extern int nSwiftTXDepth;
+extern int nZeromintPercentage;
+extern const int64_t AUTOMINT_DELAY;
+extern int nPreferredDenom;
+extern bool fEnableZeromint;
+extern bool fEnableAutoConvert;
 extern int64_t enforceMasternodePaymentsTime;
 extern std::string strMasterNodeAddr;
 extern int keysLoaded;
@@ -215,6 +219,7 @@ std::string HelpMessageGroup(const std::string& message);
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 void SetThreadPriority(int nPriority);
+void RenameThread(const char* name);
 
 /**
  * .. and a wrapper that just calls func once
@@ -223,7 +228,7 @@ template <typename Callable>
 void TraceThread(const char* name, Callable func)
 {
     std::string s = strprintf("aezora-%s", name);
-    util::ThreadRename(s.c_str());
+    RenameThread(s.c_str());
     try {
         LogPrintf("%s thread start\n", name);
         func();

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ public:
     ~PrivacyWidget();
 
     void loadWalletModel() override;
-private Q_SLOTS:
+private slots:
     void changeTheme(bool isLightTheme, QString &theme) override;
     void onCoinControlClicked();
     void onDenomClicked();

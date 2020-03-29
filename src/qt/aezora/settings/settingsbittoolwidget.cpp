@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -81,10 +81,10 @@ SettingsBitToolWidget::SettingsBitToolWidget(AEZORAGUI* _window, QWidget *parent
     // Encrypt
 
     // Address
-    ui->labelSubtitleAddress->setText(tr("AEZORA address"));
+    ui->labelSubtitleAddress->setText(tr("Enter a AEZORA address"));
     setCssProperty(ui->labelSubtitleAddress, "text-title");
 
-    ui->addressIn_ENC->setPlaceholderText(tr("Enter address"));
+    ui->addressIn_ENC->setPlaceholderText(tr("Add address"));
     setCssProperty(ui->addressIn_ENC, "edit-primary-multi-book");
     ui->addressIn_ENC->setAttribute(Qt::WA_MacShowFocusRect, 0);
     setShadow(ui->addressIn_ENC);
@@ -94,7 +94,7 @@ SettingsBitToolWidget::SettingsBitToolWidget(AEZORAGUI* _window, QWidget *parent
     setCssProperty(ui->labelSubtitleMessage, "text-title");
 
     setCssProperty(ui->passphraseIn_ENC, "edit-primary");
-    ui->passphraseIn_ENC->setPlaceholderText(tr("Enter passphrase"));
+    ui->passphraseIn_ENC->setPlaceholderText(tr("Write a message"));
     setCssProperty(ui->passphraseIn_ENC,"edit-primary");
     setShadow(ui->passphraseIn_ENC);
     ui->passphraseIn_ENC->setAttribute(Qt::WA_MacShowFocusRect, 0);
@@ -307,7 +307,7 @@ void SettingsBitToolWidget::importAddressFromDecKey(){
         ui->statusLabel_DEC->setText(tr("Please wait while key is imported"));
 
         pwalletMain->MarkDirty();
-        pwalletMain->SetAddressBook(vchAddress, "", AddressBook::AddressBookPurpose::RECEIVE);
+        pwalletMain->SetAddressBook(vchAddress, "", "receive");
 
         // Don't throw error in case a key is already there
         if (pwalletMain->HaveKey(vchAddress)) {
@@ -330,7 +330,7 @@ void SettingsBitToolWidget::importAddressFromDecKey(){
     }
 
     ui->statusLabel_DEC->setStyleSheet("QLabel { color: green; }");
-    ui->statusLabel_DEC->setText(tr("Successfully added private key to the wallet"));
+    ui->statusLabel_DEC->setText(tr("Successfully added azrate key to the wallet"));
 }
 
 void SettingsBitToolWidget::resizeEvent(QResizeEvent *event){

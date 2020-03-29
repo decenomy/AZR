@@ -26,34 +26,6 @@ static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
 //! min. -dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
 
-struct CDiskTxPos : public CDiskBlockPos {
-    unsigned int nTxOffset; // after header
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
-    {
-        READWRITE(*(CDiskBlockPos*)this);
-        READWRITE(VARINT(nTxOffset));
-    }
-
-    CDiskTxPos(const CDiskBlockPos& blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn)
-    {
-    }
-
-    CDiskTxPos()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        CDiskBlockPos::SetNull();
-        nTxOffset = 0;
-    }
-};
-
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
 class CCoinsViewDB : public CCoinsView
 {
@@ -118,12 +90,9 @@ public:
     bool EraseCoinMint(const CBigNum& bnPubcoin);
     bool EraseCoinSpend(const CBigNum& bnSerial);
     bool WipeCoins(std::string strType);
-
-    /** Accumulators (only for zPoS IBD): [checksum, denom] --> block height **/
-    bool WriteAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, const int nHeight);
-    bool ReadAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, int& nHeightRet);
-    bool EraseAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom);
-    bool WipeAccChecksums();
+    bool WriteAccumulatorValue(const uint32_t& nChecksum, const CBigNum& bnValue);
+    bool ReadAccumulatorValue(const uint32_t& nChecksum, CBigNum& bnValue);
+    bool EraseAccumulatorValue(const uint32_t& nChecksum);
 };
 
 #endif // BITCOIN_TXDB_H

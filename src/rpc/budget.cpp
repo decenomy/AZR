@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -70,7 +70,7 @@ void checkBudgetInputs(const UniValue& params, std::string &strProposalName, std
         throw JSONRPCError(RPC_IN_WARMUP, "Try again after active chain is loaded");
 
     // Start must be in the next budget cycle or later
-    const int budgetCycleBlocks = Params().GetConsensus().nBudgetCycleBlocks;
+    const int budgetCycleBlocks = Params().GetBudgetCycleBlocks();
     int pHeight = pindexPrev->nHeight;
 
     int nBlockMin = pHeight - (pHeight % budgetCycleBlocks) + budgetCycleBlocks;
@@ -552,8 +552,7 @@ UniValue getnextsuperblock(const UniValue& params, bool fHelp)
     CBlockIndex* pindexPrev = chainActive.Tip();
     if (!pindexPrev) return "unknown";
 
-    const int nBlocksPerCycle = Params().GetConsensus().nBudgetCycleBlocks;
-    int nNext = pindexPrev->nHeight - pindexPrev->nHeight % nBlocksPerCycle + nBlocksPerCycle;
+    int nNext = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetBudgetCycleBlocks() + Params().GetBudgetCycleBlocks();
     return nNext;
 }
 
@@ -733,10 +732,8 @@ UniValue mnbudgetrawvote(const UniValue& params, bool fHelp)
     vote.nTime = nTime;
     vote.SetVchSig(vchSig);
 
-    if (!vote.CheckSignature()) {
-        // try old message version
-        vote.nMessVersion = MessageVersion::MESS_VER_STRMESS;
-        if (!vote.CheckSignature()) return "Failure to verify signature.";
+    if (!vote.CheckSignature(true)) {
+        return "Failure to verify signature.";
     }
 
     std::string strError = "";

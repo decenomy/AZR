@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -73,7 +73,7 @@ struct ListenSocket {
 bool fDiscover = true;
 bool fListen = true;
 uint64_t nLocalServices = NODE_NETWORK;
-RecursiveMutex cs_mapLocalHost;
+CCriticalSection cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
@@ -85,23 +85,23 @@ bool fAddressesInitialized = false;
 std::string strSubVersion;
 
 std::vector<CNode*> vNodes;
-RecursiveMutex cs_vNodes;
+CCriticalSection cs_vNodes;
 std::map<CInv, CDataStream> mapRelay;
 std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
-RecursiveMutex cs_mapRelay;
+CCriticalSection cs_mapRelay;
 limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
 static std::deque<std::string> vOneShots;
-RecursiveMutex cs_vOneShots;
+CCriticalSection cs_vOneShots;
 
 std::set<CNetAddr> setservAddNodeAddresses;
-RecursiveMutex cs_setservAddNodeAddresses;
+CCriticalSection cs_setservAddNodeAddresses;
 
 std::vector<std::string> vAddedNodes;
-RecursiveMutex cs_vAddedNodes;
+CCriticalSection cs_vAddedNodes;
 
 NodeId nLastNodeId = 0;
-RecursiveMutex cs_nLastNodeId;
+CCriticalSection cs_nLastNodeId;
 
 static CSemaphore* semOutbound = NULL;
 boost::condition_variable messageHandlerCondition;
@@ -338,8 +338,8 @@ void AddressCurrentlyConnected(const CService& addr)
 
 uint64_t CNode::nTotalBytesRecv = 0;
 uint64_t CNode::nTotalBytesSent = 0;
-RecursiveMutex CNode::cs_totalBytesRecv;
-RecursiveMutex CNode::cs_totalBytesSent;
+CCriticalSection CNode::cs_totalBytesRecv;
+CCriticalSection CNode::cs_totalBytesSent;
 
 CNode* FindNode(const CNetAddr& ip)
 {
@@ -371,9 +371,8 @@ CNode* FindNode(const std::string& addrName)
 CNode* FindNode(const CService& addr)
 {
     LOCK(cs_vNodes);
-    const bool isRegTestNet = Params().IsRegTestNet();
     for (CNode* pnode : vNodes) {
-        if (isRegTestNet) {
+        if (Params().NetworkID() == CBaseChainParams::REGTEST) {
             //if using regtest, just check the IP
             if ((CNetAddr)pnode->addr == (CNetAddr)addr)
                 return (pnode);
@@ -488,7 +487,7 @@ void CNode::PushVersion()
 
 
 banmap_t CNode::setBanned;
-RecursiveMutex CNode::cs_setBanned;
+CCriticalSection CNode::cs_setBanned;
 bool CNode::setBannedIsDirty;
 
 void CNode::ClearBanned()
@@ -647,7 +646,7 @@ void CNode::SetBannedSetDirty(bool dirty)
 
 
 std::vector<CSubNet> CNode::vWhitelistedRange;
-RecursiveMutex CNode::cs_vWhitelistedRange;
+CCriticalSection CNode::cs_vWhitelistedRange;
 
 bool CNode::IsWhitelistedRange(const CNetAddr& addr)
 {
@@ -852,17 +851,10 @@ void CheckOffsetDisconnectedPeers(const CNetAddr& ip)
         // clear the set
         setOffsetDisconnectedPeers.clear();
         // Trigger the warning
-        std::string strWarn1 = _("Peers are being disconnected due time differences.");
-        std::string strWarn2 = _("Please check that your computer's date and time are correct! If your clock is wrong AEZORA Core will not work properly.");
-
-        LogPrintf("*** Warning: %s %s\n", strWarn1, strWarn2);
-
-        static int64_t nLastGUINotif = 0;
-        int64_t now = GetTime();
-        if (nLastGUINotif + 40 < now) { // Notify the GUI if needed.
-            nLastGUINotif = now;
-            uiInterface.ThreadSafeMessageBox(strprintf("%s\n\n%s", strWarn1, strWarn2), _("Warning"), CClientUIInterface::MSG_ERROR);
-        }
+        std::string strMessage = _("Warning: Peers are being disconnected due time differences. Please check that your computer's date and time are correct! If your clock is wrong AEZORA Core will not work properly.");
+        strMiscWarning = strMessage;
+        LogPrintf("*** %s\n", strMessage);
+        uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_ERROR);
     }
 }
 
@@ -1283,7 +1275,7 @@ void ThreadDNSAddressSeed()
         } else {
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
-            if (LookupHost(seed.host.c_str(), vIPs, 0, true)) {
+            if (LookupHost(seed.host.c_str(), vIPs)) {
                 for (CNetAddr& ip : vIPs) {
                     int nOneDay = 24 * 3600;
                     CAddress addr = CAddress(CService(ip, Params().GetDefaultPort()));
@@ -1292,15 +1284,7 @@ void ThreadDNSAddressSeed()
                     found++;
                 }
             }
-            // TODO: The seed name resolve may fail, yielding an IP of [::], which results in
-            // addrman assigning the same source to results from different seeds.
-            // This should switch to a hard-coded stable dummy IP for each seed name, so that the
-            // resolve is not required at all.
-            if (!vIPs.empty()) {
-                CService seedSource;
-                Lookup(seed.name.c_str(), seedSource, 0, true);
-                addrman.Add(vAdd, seedSource);
-            }
+            addrman.Add(vAdd, CNetAddr(seed.name, true));
         }
     }
 
@@ -1695,7 +1679,7 @@ void static Discover(boost::thread_group& threadGroup)
     char pszHostName[256] = "";
     if (gethostname(pszHostName, sizeof(pszHostName)) != SOCKET_ERROR) {
         std::vector<CNetAddr> vaddr;
-        if (LookupHost(pszHostName, vaddr, 0, true)) {
+        if (LookupHost(pszHostName, vaddr)) {
             for (const CNetAddr& addr : vaddr) {
                 if (AddLocal(addr, LOCAL_IF))
                     LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToString());
@@ -1735,31 +1719,26 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     int64_t nStart = GetTimeMillis();
     {
         CAddrDB adb;
-        if (adb.Read(addrman))
-            LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
-        else
+        if (!adb.Read(addrman))
             LogPrintf("Invalid or missing peers.dat; recreating\n");
     }
 
-    uiInterface.InitMessage(_("Loading banlist..."));
-    // Load addresses from banlist.dat
-    nStart = GetTimeMillis();
+    //try to read stored banlist
     CBanDB bandb;
     banmap_t banmap;
-    if (bandb.Read(banmap)) {
-        CNode::SetBanned(banmap); // thread save setter
-        CNode::SetBannedSetDirty(false); // no need to write down, just read data
-        CNode::SweepBanned(); // sweep out unused entries
-
-        LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
-            banmap.size(), GetTimeMillis() - nStart);
-    } else
+    if (!bandb.Read(banmap))
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
+
+    CNode::SetBanned(banmap); //thread save setter
+    CNode::SetBannedSetDirty(false); //no need to write down just read or nonexistent data
+    CNode::SweepBanned(); //sweap out unused entries
 
     // Initialize random numbers. Even when rand() is only usable for trivial use-cases most nodes should have a different
     // seed after all the file-IO done at this point. Should be good enough even when nodes are started via scripts.
     srand(time(NULL));
 
+    LogPrintf("Loaded %i addresses from peers.dat  %dms\n",
+        addrman.size(), GetTimeMillis() - nStart);
     fAddressesInitialized = true;
 
     if (semOutbound == NULL) {
@@ -1915,7 +1894,7 @@ void RelayInv(CInv& inv)
 {
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes){
-        if((pnode->nServices == NODE_BLOOM_WITHOUT_MN) && inv.IsMasterNodeType())continue;
+        if((pnode->nServices == NODE_BLOOM_WITHOUT_MN || pnode->nServices == NODE_BLOOM_LIGHT_ZC) && inv.IsMasterNodeType())continue;
         if (pnode->nVersion >= ActiveProtocol())
             pnode->PushInventory(inv);
     }
@@ -2342,8 +2321,9 @@ void DumpBanlist()
     CBanDB bandb;
     banmap_t banmap;
     CNode::GetBanned(banmap);
-    if (bandb.Write(banmap))
+    if (bandb.Write(banmap)) {
         CNode::SetBannedSetDirty(false);
+    }
 
     LogPrint("net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
         banmap.size(), GetTimeMillis() - nStart);

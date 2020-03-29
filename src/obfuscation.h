@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -276,7 +276,7 @@ public:
 
     void InitCollateralAddress()
     {
-        SetCollateralAddress(Params().GetConsensus().strObfuscationPoolDummyAddress);
+        SetCollateralAddress(Params().ObfuscationPoolDummyAddress());
     }
 
     bool SetCollateralAddress(std::string strAddress);
@@ -327,7 +327,7 @@ public:
     /// Get the maximum number of transactions for the pool
     int GetMaxPoolTransactions()
     {
-        return Params().GetConsensus().nPoolMaxTransactions;
+        return Params().PoolMaxTransactions();
     }
 
     /// Check for process in Obfuscation

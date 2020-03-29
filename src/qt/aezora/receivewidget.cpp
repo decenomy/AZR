@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -84,7 +84,6 @@ ReceiveWidget::ReceiveWidget(AEZORAGUI* parent) :
     ui->listViewAddress->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listViewAddress->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui->listViewAddress->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->listViewAddress->setUniformItemSizes(true);
 
     spacer = new QSpacerItem(40, 20, QSizePolicy::Maximum, QSizePolicy::Expanding);
     ui->btnMyAddresses->setChecked(true);
@@ -148,7 +147,7 @@ void ReceiveWidget::updateLabel(){
         if (!label.isEmpty()) {
             ui->labelLabel->setVisible(true);
             ui->labelLabel->setText(label);
-            ui->pushButtonLabel->setText(tr("Edit Label"));
+            ui->pushButtonLabel->setText(tr("Change Label"));
         }else{
             ui->labelLabel->setVisible(false);
         }
@@ -189,7 +188,7 @@ void ReceiveWidget::onLabelClicked(){
             if (!label.isEmpty() && walletModel->updateAddressBookLabels(
                     address.Get(),
                     label.toUtf8().constData(),
-                    AddressBook::AddressBookPurpose::RECEIVE
+                    "receive"
             )
                     ) {
                 // update label status (icon color)

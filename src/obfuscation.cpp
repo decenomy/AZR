@@ -1,5 +1,5 @@
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -295,12 +295,11 @@ void CObfuscationPool::ChargeFees()
     r = rand() % 100;
     int target = 0;
 
-    const int pool_max_txs = GetMaxPoolTransactions();
     //mostly offending?
-    if (offences >= pool_max_txs - 1 && r > 33) return;
+    if (offences >= Params().PoolMaxTransactions() - 1 && r > 33) return;
 
     //everyone is an offender? That's not right
-    if (offences >= pool_max_txs) return;
+    if (offences >= Params().PoolMaxTransactions()) return;
 
     //charge one of the offenders randomly
     if (offences > 1) target = 50;
@@ -396,7 +395,7 @@ void CObfuscationPool::ChargeRandomFees()
 //
 void CObfuscationPool::CheckTimeout()
 {
-    if (!fMasterNode) return;
+    if (!fEnableZeromint && !fMasterNode) return;
 
     // catching hanging sessions
     if (!fMasterNode) {
@@ -481,7 +480,7 @@ void CObfuscationPool::CheckTimeout()
 //
 void CObfuscationPool::CheckForCompleteQueue()
 {
-    if (!fMasterNode) return;
+    if (!fEnableZeromint && !fMasterNode) return;
 
     /* Check to see if we're ready for submissions from clients */
     //
@@ -588,7 +587,7 @@ void ThreadCheckObfuScationPool()
     if (fLiteMode) return; //disable all Obfuscation/Masternode related functionality
 
     // Make this thread recognisable as the wallet flushing thread
-    util::ThreadRename("aezora-obfuscation");
+    RenameThread("aezora-obfuscation");
     LogPrintf("Masternodes thread started\n");
 
     unsigned int c = 0;

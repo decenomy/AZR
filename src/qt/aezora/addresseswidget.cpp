@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -94,7 +94,6 @@ AddressesWidget::AddressesWidget(AEZORAGUI* parent) :
     ui->listAddresses->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listAddresses->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui->listAddresses->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->listAddresses->setUniformItemSizes(true);
 
     //Empty List
     ui->emptyContainer->setVisible(false);
@@ -113,7 +112,7 @@ AddressesWidget::AddressesWidget(AEZORAGUI* parent) :
     setCssEditLine(ui->lineEditName, true);
 
     // Address
-    ui->labelAddress->setText(tr("Enter AEZORA address"));
+    ui->labelAddress->setText(tr("Enter a AEZORA address"));
     setCssProperty(ui->labelAddress, "text-title");
     ui->lineEditAddress->setPlaceholderText("e.g. A7VFR83SQbiezrW72hjc…");
     setCssEditLine(ui->lineEditAddress, true);

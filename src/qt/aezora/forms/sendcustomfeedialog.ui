@@ -201,7 +201,7 @@
            <item alignment="Qt::AlignHCenter">
             <widget class="QCheckBox" name="checkBoxRecommended">
              <property name="text">
-              <string>Recommended</string>
+              <string>Recomended</string>
              </property>
             </widget>
            </item>

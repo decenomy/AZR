@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,7 +44,7 @@ void MNModel::updateMNList(){
             collateralTxAccepted.insert(mne.getTxHash(), txAccepted);
         }
     }
-    Q_EMIT dataChanged(index(0, 0, QModelIndex()), index(end, 5, QModelIndex()) );
+    emit dataChanged(index(0, 0, QModelIndex()), index(end, 5, QModelIndex()) );
 }
 
 int MNModel::rowCount(const QModelIndex &parent) const
@@ -135,7 +135,7 @@ bool MNModel::removeMn(const QModelIndex& modelIndex) {
     beginRemoveRows(QModelIndex(), idx, idx);
     nodes.take(alias);
     endRemoveRows();
-    Q_EMIT dataChanged(index(idx, 0, QModelIndex()), index(idx, 5, QModelIndex()) );
+    emit dataChanged(index(idx, 0, QModelIndex()), index(idx, 5, QModelIndex()) );
     return true;
 }
 
@@ -149,24 +149,4 @@ bool MNModel::addMn(CMasternodeConfig::CMasternodeEntry* mne){
     nodes.insert(QString::fromStdString(mne->getAlias()), std::make_pair(QString::fromStdString(mne->getIp()), pmn));
     endInsertRows();
     return true;
-}
-
-int MNModel::getMNState(QString mnAlias) {
-    QMap<QString, std::pair<QString, CMasternode*>>::const_iterator it = nodes.find(mnAlias);
-    if (it != nodes.end()) return it.value().second->activeState;
-    throw std::runtime_error(std::string("Masternode alias not found"));
-}
-
-bool MNModel::isMNInactive(QString mnAlias) {
-    int activeState = getMNState(mnAlias);
-    return activeState == CMasternode::MASTERNODE_MISSING || activeState == CMasternode::MASTERNODE_EXPIRED || activeState == CMasternode::MASTERNODE_REMOVE;
-}
-
-bool MNModel::isMNActive(QString mnAlias) {
-    int activeState = getMNState(mnAlias);
-    return activeState == CMasternode::MASTERNODE_PRE_ENABLED || activeState == CMasternode::MASTERNODE_ENABLED;
-}
-
-bool MNModel::isMNsNetworkSynced() {
-    return masternodeSync.IsSynced();
 }

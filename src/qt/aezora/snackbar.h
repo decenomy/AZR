@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,7 @@ public:
     virtual void showEvent(QShowEvent *event) override;
     void sizeTo(QWidget *widget);
     void setText(QString text);
-private Q_SLOTS:
+private slots:
     void hideAnim();
     void windowResizeEvent(QResizeEvent *event);
 private:

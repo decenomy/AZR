@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,10 +24,10 @@ public:
     QString getURI();
     void showEvent(QShowEvent *event) override;
 
-protected Q_SLOTS:
+protected slots:
     void accept() override;
 
-private Q_SLOTS:
+private slots:
     void on_selectFileButton_clicked();
 
 private:

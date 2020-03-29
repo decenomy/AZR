@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,7 +18,6 @@
 #include "qt/aezora/defaultdialog.h"
 #include "qt/aezora/settings/settingsfaqwidget.h"
 
-#include <QDesktopWidget>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QApplication>
@@ -31,8 +30,6 @@
 
 #define BASE_WINDOW_WIDTH 1200
 #define BASE_WINDOW_HEIGHT 740
-#define BASE_WINDOW_MIN_HEIGHT 620
-#define BASE_WINDOW_MIN_WIDTH 1100
 
 
 const QString AEZORAGUI::DEFAULT_WALLET = "~Default";
@@ -43,18 +40,8 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
 
     /* Open CSS when configured */
     this->setStyleSheet(GUIUtil::loadStyleSheet());
-    this->setMinimumSize(BASE_WINDOW_MIN_WIDTH, BASE_WINDOW_MIN_HEIGHT);
-
-
-    // Adapt screen size
-    QRect rec = QApplication::desktop()->screenGeometry();
-    int adaptedHeight = (rec.height() < BASE_WINDOW_HEIGHT) ?  BASE_WINDOW_MIN_HEIGHT : BASE_WINDOW_HEIGHT;
-    int adaptedWidth = (rec.width() < BASE_WINDOW_WIDTH) ?  BASE_WINDOW_MIN_WIDTH : BASE_WINDOW_WIDTH;
-    GUIUtil::restoreWindowGeometry(
-            "nWindow",
-            QSize(adaptedWidth, adaptedHeight),
-            this
-    );
+    this->setMinimumSize(BASE_WINDOW_WIDTH, BASE_WINDOW_HEIGHT);
+    GUIUtil::restoreWindowGeometry("nWindow", QSize(BASE_WINDOW_WIDTH, BASE_WINDOW_HEIGHT), this);
 
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
@@ -63,11 +50,8 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
     enableWallet = false;
 #endif // ENABLE_WALLET
 
-    QString windowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
-    if (windowTitle.isEmpty()) {
-        windowTitle = tr("AEZORA Core") + " - ";
-        windowTitle += ((enableWallet) ? tr("Wallet") : tr("Node"));
-    }
+    QString windowTitle = tr("AEZORA Core") + " - ";
+    windowTitle += ((enableWallet) ? tr("Wallet") : tr("Node"));
     windowTitle += " " + networkStyle->getTitleAddText();
     setWindowTitle(windowTitle);
 
@@ -78,13 +62,16 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
     MacDockIconHandler::instance()->setIcon(networkStyle->getAppIcon());
 #endif
 
+
+
+
 #ifdef ENABLE_WALLET
     // Create wallet frame
     if(enableWallet){
 
         QFrame* centralWidget = new QFrame(this);
-        this->setMinimumWidth(BASE_WINDOW_MIN_WIDTH);
-        this->setMinimumHeight(BASE_WINDOW_MIN_HEIGHT);
+        this->setMinimumWidth(BASE_WINDOW_WIDTH);
+        this->setMinimumHeight(BASE_WINDOW_HEIGHT);
         QHBoxLayout* centralWidgetLayouot = new QHBoxLayout();
         centralWidget->setLayout(centralWidgetLayouot);
         centralWidgetLayouot->setContentsMargins(0,0,0,0);
@@ -128,6 +115,7 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         sendWidget = new SendWidget(this);
         receiveWidget = new ReceiveWidget(this);
         addressesWidget = new AddressesWidget(this);
+        privacyWidget = new PrivacyWidget(this);
         masterNodesWidget = new MasterNodesWidget(this);
         coldStakingWidget = new ColdStakingWidget(this);
         settingsWidget = new SettingsWidget(this);
@@ -137,6 +125,7 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         stackedContainer->addWidget(sendWidget);
         stackedContainer->addWidget(receiveWidget);
         stackedContainer->addWidget(addressesWidget);
+        stackedContainer->addWidget(privacyWidget);
         stackedContainer->addWidget(masterNodesWidget);
         stackedContainer->addWidget(coldStakingWidget);
         stackedContainer->addWidget(settingsWidget);
@@ -200,6 +189,7 @@ void AEZORAGUI::connectActions() {
     connect(sendWidget, &SendWidget::showHide, this, &AEZORAGUI::showHide);
     connect(receiveWidget, &ReceiveWidget::showHide, this, &AEZORAGUI::showHide);
     connect(addressesWidget, &AddressesWidget::showHide, this, &AEZORAGUI::showHide);
+    connect(privacyWidget, &PrivacyWidget::showHide, this, &AEZORAGUI::showHide);
     connect(masterNodesWidget, &MasterNodesWidget::showHide, this, &AEZORAGUI::showHide);
     connect(masterNodesWidget, &MasterNodesWidget::execDialog, this, &AEZORAGUI::execDialog);
     connect(coldStakingWidget, &ColdStakingWidget::showHide, this, &AEZORAGUI::showHide);
@@ -236,7 +226,7 @@ AEZORAGUI::~AEZORAGUI() {
 /** Get restart command-line parameters and request restart */
 void AEZORAGUI::handleRestart(QStringList args){
     if (!ShutdownRequested())
-        Q_EMIT requestedRestart(args);
+        emit requestedRestart(args);
 }
 
 
@@ -478,7 +468,7 @@ void AEZORAGUI::goToAddresses(){
 }
 
 void AEZORAGUI::goToPrivacy(){
-    if (privacyWidget) showTop(privacyWidget);
+    showTop(privacyWidget);
 }
 
 void AEZORAGUI::goToMasterNodes(){
@@ -510,7 +500,7 @@ void AEZORAGUI::changeTheme(bool isLightTheme){
     this->setStyleSheet(css);
 
     // Notify
-    Q_EMIT themeChanged(isLightTheme, css);
+    emit themeChanged(isLightTheme, css);
 
     // Update style
     updateStyle(this);
@@ -522,7 +512,7 @@ void AEZORAGUI::resizeEvent(QResizeEvent* event){
     // background
     showHide(opEnabled);
     // Notify
-    Q_EMIT windowResizeEvent(event);
+    emit windowResizeEvent(event);
 }
 
 bool AEZORAGUI::execDialog(QDialog *dialog, int xDiv, int yDiv){
@@ -583,21 +573,13 @@ bool AEZORAGUI::addWallet(const QString& name, WalletModel* walletModel)
     receiveWidget->setWalletModel(walletModel);
     sendWidget->setWalletModel(walletModel);
     addressesWidget->setWalletModel(walletModel);
+    privacyWidget->setWalletModel(walletModel);
     masterNodesWidget->setWalletModel(walletModel);
     coldStakingWidget->setWalletModel(walletModel);
     settingsWidget->setWalletModel(walletModel);
 
-    // Privacy screen
-    if (walletModel->getZerocoinBalance() > 0) {
-        privacyWidget = new PrivacyWidget(this);
-        stackedContainer->addWidget(privacyWidget);
-
-        privacyWidget->setWalletModel(walletModel);
-        connect(privacyWidget, &PrivacyWidget::message, this, &AEZORAGUI::message);
-        connect(privacyWidget, &PrivacyWidget::showHide, this, &AEZORAGUI::showHide);
-    }
-
     // Connect actions..
+    connect(privacyWidget, &PrivacyWidget::message, this, &AEZORAGUI::message);
     connect(masterNodesWidget, &MasterNodesWidget::message, this, &AEZORAGUI::message);
     connect(coldStakingWidget, &MasterNodesWidget::message, this, &AEZORAGUI::message);
     connect(topBar, &TopBar::message, this, &AEZORAGUI::message);

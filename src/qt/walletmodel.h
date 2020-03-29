@@ -1,6 +1,6 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2016 The Dash developers
-// Copyright (c) 2017-2020 The AEZORA developers
+// Copyright (c) 2017-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -145,8 +145,6 @@ public:
     /** Whether cold staking is enabled or disabled in the network **/
     bool isColdStakingNetworkelyEnabled() const;
     CAmount getMinColdStakingAmount() const;
-    /* current staking status from the miner thread **/
-    bool isStakingStatusActive() const;
 
     CAmount getBalance(const CCoinControl* coinControl = NULL) const;
     CAmount getUnconfirmedBalance() const;
@@ -167,7 +165,6 @@ public:
 
     EncryptionStatus getEncryptionStatus() const;
     bool isWalletUnlocked() const;
-    bool isWalletLocked() const;
     CKey generateNewKey() const; //for temporary paper wallet key generation
     bool setAddressBook(const CTxDestination& address, const std::string& strName, const std::string& strPurpose);
     void encryptKey(const CKey key, const std::string& pwd, const std::string& slt, std::vector<unsigned char>& crypted);
@@ -202,6 +199,8 @@ public:
     bool createZazrSpend(
             CWalletTx &wtxNew,
             std::vector<CZerocoinMint> &vMintsSelected,
+            bool fMintChange,
+            bool fMinimizeChange,
             CZerocoinSpendReceipt &receipt,
             std::list<std::pair<CBitcoinAddress*, CAmount>> outputs,
             std::string changeAddress = ""
@@ -209,6 +208,8 @@ public:
 
     bool sendZazr(
             std::vector<CZerocoinMint> &vMintsSelected,
+            bool fMintChange,
+            bool fMinimizeChange,
             CZerocoinSpendReceipt &receipt,
             std::list<std::pair<CBitcoinAddress*, CAmount>> outputs,
             std::string changeAddress = ""
@@ -217,8 +218,22 @@ public:
     bool convertBackZazr(
             CAmount value,
             std::vector<CZerocoinMint> &vMintsSelected,
+            bool fMintChange,
+            bool fMinimizeChange,
             CZerocoinSpendReceipt &receipt
     );
+
+    // ###################
+    // Cold Staking
+    // ###################
+
+
+
+    // ###################
+    // End Cold Staking
+    // ###################
+
+
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString& passphrase);
@@ -328,6 +343,7 @@ private:
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
     int cachedTxLocks;
+    int cachedZeromintPercentage;
 
     QTimer* pollTimer;
 
@@ -335,7 +351,7 @@ private:
     void unsubscribeFromCoreSignals();
     Q_INVOKABLE void checkBalanceChanged();
 
-Q_SIGNALS:
+signals:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& zerocoinBalance, const CAmount& unconfirmedZerocoinBalance, const CAmount& immatureZerocoinBalance,
@@ -368,7 +384,7 @@ Q_SIGNALS:
     // Receive tab address may have changed
     void notifyReceiveAddressChanged();
 
-public Q_SLOTS:
+public slots:
     /* Wallet status might have changed */
     void updateStatus();
     /* New transaction, or transaction changed status */

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,7 @@ SendMultiRow::SendMultiRow(PWidget *parent) :
     ui->setupUi(this);
     this->setStyleSheet(parent->styleSheet());
 
-    ui->lineEditAddress->setPlaceholderText(tr("Enter address"));
+    ui->lineEditAddress->setPlaceholderText(tr("Add address"));
     setCssProperty(ui->lineEditAddress, "edit-primary-multi-book");
     ui->lineEditAddress->setAttribute(Qt::WA_MacShowFocusRect, 0);
     setShadow(ui->stackedAddress);
@@ -29,9 +29,9 @@ SendMultiRow::SendMultiRow(PWidget *parent) :
     GUIUtil::setupAmountWidget(ui->lineEditAmount, this);
 
     /* Description */
-    ui->labelSubtitleDescription->setText("Address label (optional)");
+    ui->labelSubtitleDescription->setText("Label address (optional)");
     setCssProperty(ui->labelSubtitleDescription, "text-title");
-    ui->lineEditDescription->setPlaceholderText(tr("Enter label"));
+    ui->lineEditDescription->setPlaceholderText(tr("Add description"));
     initCssEditLine(ui->lineEditDescription);
 
     // Button menu
@@ -58,8 +58,8 @@ SendMultiRow::SendMultiRow(PWidget *parent) :
 
     connect(ui->lineEditAmount, SIGNAL(textChanged(const QString&)), this, SLOT(amountChanged(const QString&)));
     connect(ui->lineEditAddress, SIGNAL(textChanged(const QString&)), this, SLOT(addressChanged(const QString&)));
-    connect(btnContact, &QAction::triggered, [this](){Q_EMIT onContactsClicked(this);});
-    connect(ui->btnMenu, &QPushButton::clicked, [this](){Q_EMIT onMenuClicked(this);});
+    connect(btnContact, &QAction::triggered, [this](){emit onContactsClicked(this);});
+    connect(ui->btnMenu, &QPushButton::clicked, [this](){emit onMenuClicked(this);});
 }
 
 void SendMultiRow::amountChanged(const QString& amount){
@@ -71,7 +71,7 @@ void SendMultiRow::amountChanged(const QString& amount){
             setCssEditLine(ui->lineEditAmount, true, true);
         }
     }
-    Q_EMIT onValueChanged();
+    emit onValueChanged();
 }
 
 /**
@@ -100,7 +100,7 @@ bool SendMultiRow::addressChanged(const QString& str){
                 } else if(!rcp.message.isEmpty())
                     ui->lineEditDescription->setText(rcp.message);
 
-                Q_EMIT onUriParsed(rcp);
+                emit onUriParsed(rcp);
             } else {
                 setCssProperty(ui->lineEditAddress, "edit-primary-multi-book-error");
             }
@@ -132,7 +132,7 @@ void SendMultiRow::updateDisplayUnit(){
 }
 
 void SendMultiRow::deleteClicked() {
-    Q_EMIT removeEntry(this);
+    emit removeEntry(this);
 }
 
 void SendMultiRow::clear() {

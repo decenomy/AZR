@@ -10,7 +10,6 @@
 
 #include "util.h"
 #include "utilstrencodings.h"
-#include "util/threadnames.h"
 
 #include <stdio.h>
 
@@ -38,30 +37,23 @@ void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 //
 
 struct CLockLocation {
-    CLockLocation(
-        const char* pszName,
-        const char* pszFile,
-        int nLine,
-        bool fTryIn,
-        const std::string& thread_name)
-        : fTry(fTryIn),
-          mutexName(pszName),
-          sourceFile(pszFile),
-          m_thread_name(thread_name),
-          sourceLine(nLine) {}
+    CLockLocation(const char* pszName, const char* pszFile, int nLine, bool fTryIn)
+    {
+        mutexName = pszName;
+        sourceFile = pszFile;
+        sourceLine = nLine;
+        fTry = fTryIn;
+    }
 
     std::string ToString() const
     {
-        return strprintf(
-            "%s %s:%s%s (in thread %s)",
-            mutexName, sourceFile, itostr(sourceLine), (fTry ? " (TRY)" : ""), m_thread_name);
+        return mutexName + "  " + sourceFile + ":" + itostr(sourceLine) + (fTry ? " (TRY)" : "");
     }
 
 private:
     bool fTry;
     std::string mutexName;
     std::string sourceFile;
-    const std::string& m_thread_name;
     int sourceLine;
 };
 
@@ -72,7 +64,7 @@ typedef std::set<std::pair<void*, void*> > InvLockOrders;
 struct LockData {
     // Very ugly hack: as the global constructs and destructors run single
     // threaded, we use this boolean to know whether LockData still exists,
-    // as DeleteLock can get called by global RecursiveMutex destructors
+    // as DeleteLock can get called by global CCriticalSection destructors
     // after LockData disappears.
     bool available;
     LockData() : available(true) {}
@@ -81,11 +73,7 @@ struct LockData {
     LockOrders lockorders;
     InvLockOrders invlockorders;
     std::mutex dd_mutex;
-};
-LockData& GetLockData() {
-    static LockData lockdata;
-    return lockdata;
-}
+} static lockdata;
 
 static thread_local LockStack g_lockstack;
 
@@ -93,35 +81,29 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
 {
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
-    for (const std::pair<void*, CLockLocation> & i : s2) {
+    for (const std::pair<void*, CLockLocation>& i : s2) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)"); /* Continued */
+            LogPrintf(" (1)");
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)"); /* Continued */
+            LogPrintf(" (2)");
         }
         LogPrintf(" %s\n", i.second.ToString());
     }
     LogPrintf("Current lock order is:\n");
-    for (const std::pair<void*, CLockLocation> & i : s1) {
+    for (const std::pair<void*, CLockLocation>& i : s1) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)"); /* Continued */
+            LogPrintf(" (1)");
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)"); /* Continued */
+            LogPrintf(" (2)");
         }
         LogPrintf(" %s\n", i.second.ToString());
     }
-    if (g_debug_lockorder_abort) {
-        tfm::format(std::cerr, "Assertion failed: detected inconsistent lock order at %s:%i, details in debug log.\n", __FILE__, __LINE__);
-        abort();
-    }
-    throw std::logic_error("potential deadlock detected");
 }
 
 static void push_lock(void* c, const CLockLocation& locklocation)
 {
-    LockData& lockdata = GetLockData();
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
 
     g_lockstack.push_back(std::make_pair(c, locklocation));
@@ -133,7 +115,7 @@ static void push_lock(void* c, const CLockLocation& locklocation)
         std::pair<void*, void*> p1 = std::make_pair(i.first, c);
         if (lockdata.lockorders.count(p1))
             continue;
-        lockdata.lockorders.emplace(p1, g_lockstack);
+        lockdata.lockorders[p1] = g_lockstack;
 
         std::pair<void*, void*> p2 = std::make_pair(c, i.first);
         lockdata.invlockorders.insert(p2);
@@ -149,7 +131,7 @@ static void pop_lock()
 
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry)
 {
-    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry, util::ThreadGetInternalName()));
+    push_lock(cs, CLockLocation(pszName, pszFile, nLine, fTry));
 }
 
 void LeaveCritical()
@@ -174,19 +156,8 @@ void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine,
     abort();
 }
 
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
-{
-    for (const std::pair<void*, CLockLocation>& i : g_lockstack) {
-        if (i.first == cs) {
-            tfm::format(std::cerr, "Assertion failed: lock %s held in %s:%i; locks held:\n%s", pszName, pszFile, nLine, LocksHeld());
-            abort();
-        }
-    }
-}
-
 void DeleteLock(void* cs)
 {
-    LockData& lockdata = GetLockData();
     if (!lockdata.available) {
         // We're already shutting down.
         return;
@@ -206,7 +177,5 @@ void DeleteLock(void* cs)
         lockdata.invlockorders.erase(invit++);
     }
 }
-
-bool g_debug_lockorder_abort = true;
 
 #endif /* DEBUG_LOCKORDER */

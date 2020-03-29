@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The AEZORA developers
+// Copyright (c) 2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -50,12 +50,12 @@ public:
     explicit SortEdit(QWidget* parent = nullptr) : QLineEdit(parent){}
 
     inline void mousePressEvent(QMouseEvent *) override{
-        Q_EMIT Mouse_Pressed();
+        emit Mouse_Pressed();
     }
 
     ~SortEdit() override{}
 
-Q_SIGNALS:
+signals:
     void Mouse_Pressed();
 
 };
@@ -105,17 +105,17 @@ public:
     void run(int type) override;
     void onError(QString error, int type) override;
 
-public Q_SLOTS:
+public slots:
     void walletSynced(bool isSync);
     /**
      * Show incoming transaction notification for new transactions.
      * The new items are those between start and end inclusive, under the given parent item.
     */
     void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
-Q_SIGNALS:
+signals:
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
-private Q_SLOTS:
+private slots:
     void handleTransactionClicked(const QModelIndex &index);
     void changeTheme(bool isLightTheme, QString &theme) override;
     void onSortChanged(const QString&);
@@ -179,7 +179,7 @@ private:
     void setChartShow(ChartShowType type);
     std::pair<int, int> getChartRange(QMap<int, std::pair<qint64, qint64>> amountsBy);
 
-private Q_SLOTS:
+private slots:
     void onChartRefreshed();
 
 #endif

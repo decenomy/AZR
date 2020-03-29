@@ -41,10 +41,7 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-TMPDIR_PREFIX = "aezora_func_test_"
-
-
-class AezoraTestFramwork():
+class BitcoinTestFramework():
     """Base class for a aezora test script.
 
     Individual aezora test scripts should subclass this class and override the set_test_params() and run_test() methods.
@@ -113,7 +110,7 @@ class AezoraTestFramwork():
             self.options.tmpdir = os.path.abspath(self.options.tmpdir)
             os.makedirs(self.options.tmpdir, exist_ok=False)
         else:
-            self.options.tmpdir = tempfile.mkdtemp(prefix="TMPDIR_PREFIX")
+            self.options.tmpdir = tempfile.mkdtemp(prefix="test")
         self._start_logging()
 
         success = TestStatus.FAILED
@@ -454,7 +451,7 @@ class AezoraTestFramwork():
         for i in range(self.num_nodes):
             initialize_datadir(self.options.tmpdir, i)
 
-class ComparisonTestFramework(AezoraTestFramwork):
+class ComparisonTestFramework(BitcoinTestFramework):
     """Test framework for doing p2p comparison testing
 
     Sets up some aezorad binaries:

@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2017-2020 The AEZORA developers
+// Copyright (c) 2017-2019 The AEZORA developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ class CScriptID;
 class CKeyStore
 {
 protected:
-    mutable RecursiveMutex cs_KeyStore;
+    mutable CCriticalSection cs_KeyStore;
 
 public:
     virtual ~CKeyStore() {}

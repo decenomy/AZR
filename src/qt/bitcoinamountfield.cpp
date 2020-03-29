@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
-// Copyright (c) 2017-2020 The AEZORA developers
+// Copyright (c) 2017-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -61,7 +61,7 @@ public:
     void setValue(const CAmount& value)
     {
         lineEdit()->setText(BitcoinUnits::format(currentUnit, value, false, BitcoinUnits::separatorAlways));
-        Q_EMIT valueChanged();
+        emit valueChanged();
     }
 
     void stepBy(int steps)
@@ -175,7 +175,7 @@ protected:
         return rv;
     }
 
-Q_SIGNALS:
+signals:
     void valueChanged();
 };
 

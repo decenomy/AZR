@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2020 The AEZORA developers
+// Copyright (c) 2015-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,6 +56,9 @@
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
+#if QT_VERSION < 0x050400
+Q_IMPORT_PLUGIN(AccessibleFactory)
+#endif
 #if defined(QT_QPA_PLATFORM_XCB)
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_WINDOWS)
@@ -154,12 +157,12 @@ class BitcoinCore : public QObject
 public:
     explicit BitcoinCore();
 
-public Q_SLOTS:
+public slots:
     void initialize();
     void shutdown();
     void restart(QStringList args);
 
-Q_SIGNALS:
+signals:
     void initializeResult(int retval);
     void shutdownResult(int retval);
     void runawayException(const QString& message);
@@ -205,14 +208,14 @@ public:
     /// Get window identifier of QMainWindow (AEZORAGUI)
     WId getMainWinId() const;
 
-public Q_SLOTS:
+public slots:
     void initializeResult(int retval);
     void shutdownResult(int retval);
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString& message);
     void updateTranslation();
 
-Q_SIGNALS:
+signals:
     void requestedInitialize();
     void requestedRestart(QStringList args);
     void requestedShutdown();
@@ -244,7 +247,7 @@ BitcoinCore::BitcoinCore() : QObject()
 void BitcoinCore::handleRunawayException(const std::exception* e)
 {
     PrintExceptionContinue(e, "Runaway exception");
-    Q_EMIT runawayException(QString::fromStdString(strMiscWarning));
+    emit runawayException(QString::fromStdString(strMiscWarning));
 }
 
 void BitcoinCore::initialize()
@@ -254,7 +257,7 @@ void BitcoinCore::initialize()
     try {
         qDebug() << __func__ << ": Running AppInit2 in thread";
         int rv = AppInit2();
-        Q_EMIT initializeResult(rv);
+        emit initializeResult(rv);
     } catch (const std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
@@ -271,7 +274,7 @@ void BitcoinCore::restart(QStringList args)
             Interrupt();
             PrepareShutdown();
             qDebug() << __func__ << ": Shutdown finished";
-            Q_EMIT shutdownResult(1);
+            emit shutdownResult(1);
             CExplicitNetCleanup::callCleanup();
             QProcess::startDetached(QApplication::applicationFilePath(), args);
             qDebug() << __func__ << ": Restart initiated...";
@@ -291,7 +294,7 @@ void BitcoinCore::shutdown()
         Interrupt();
         Shutdown();
         qDebug() << __func__ << ": Shutdown finished";
-        Q_EMIT shutdownResult(1);
+        emit shutdownResult(1);
     } catch (const std::exception& e) {
         handleRunawayException(&e);
     } catch (...) {
@@ -318,7 +321,7 @@ BitcoinApplication::~BitcoinApplication()
 {
     if (coreThread) {
         qDebug() << __func__ << ": Stopping thread";
-        Q_EMIT stopThread();
+        emit stopThread();
         coreThread->wait();
         qDebug() << __func__ << ": Stopped thread";
     }
@@ -415,7 +418,7 @@ void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
-    Q_EMIT requestedInitialize();
+    emit requestedInitialize();
 }
 
 void BitcoinApplication::requestShutdown()
@@ -438,7 +441,7 @@ void BitcoinApplication::requestShutdown()
     ShutdownWindow::showShutdownWindow(window);
 
     // Request shutdown from core thread
-    Q_EMIT requestedShutdown();
+    emit requestedShutdown();
 }
 
 void BitcoinApplication::initializeResult(int retval)
@@ -473,7 +476,7 @@ void BitcoinApplication::initializeResult(int retval)
         } else {
             window->show();
         }
-        Q_EMIT splashFinished(window);
+        emit splashFinished(window);
 
 #ifdef ENABLE_WALLET
         // Now that initialization/startup is done, process any command-line
@@ -526,8 +529,10 @@ int main(int argc, char* argv[])
     Q_INIT_RESOURCE(aezora_locale);
     Q_INIT_RESOURCE(aezora);
 
+#if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+#endif
 #if QT_VERSION >= 0x050600
     QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif

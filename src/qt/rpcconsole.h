@@ -49,7 +49,7 @@ public:
 protected:
     virtual bool eventFilter(QObject* obj, QEvent* event);
 
-private Q_SLOTS:
+private slots:
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
     /** open the debug.log from the current datadir */
@@ -70,7 +70,7 @@ private Q_SLOTS:
     /** clear the selected node */
     void clearSelectedNode();
 
-public Q_SLOTS:
+public slots:
     void clear();
 
     /** Wallet repair options */
@@ -121,7 +121,7 @@ public Q_SLOTS:
     /** Show folder with wallet backups in default browser */
     void showBackups();
 
-Q_SIGNALS:
+signals:
     // For RPC command executor
     void stopExecutor();
     void cmdRequest(const QString& command);

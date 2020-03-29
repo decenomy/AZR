@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2017-2020 The AEZORA developers
+// Copyright (c) 2017-2019 The AEZORA developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,7 +42,7 @@
 // Settings
 static proxyType proxyInfo[NET_MAX];
 static proxyType nameProxy;
-static RecursiveMutex cs_proxyInfos;
+static CCriticalSection cs_proxyInfos;
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = false;
 
@@ -625,12 +625,10 @@ bool ConnectSocketByName(CService& addr, SOCKET& hSocketRet, const char* pszDest
     proxyType nameProxy;
     GetNameProxy(nameProxy);
 
-    CService addrResolved;
-    if (Lookup(strDest.c_str(), addrResolved, port, fNameLookup && !HaveNameProxy())) {
-        if (addrResolved.IsValid()) {
-            addr = addrResolved;
-            return ConnectSocket(addr, hSocketRet, nTimeout);
-        }
+    CService addrResolved(CNetAddr(strDest, fNameLookup && !HaveNameProxy()), port);
+    if (addrResolved.IsValid()) {
+        addr = addrResolved;
+        return ConnectSocket(addr, hSocketRet, nTimeout);
     }
 
     addr = CService("0.0.0.0:0");
@@ -696,19 +694,19 @@ CNetAddr::CNetAddr(const struct in6_addr& ipv6Addr)
     SetRaw(NET_IPV6, (const uint8_t*)&ipv6Addr);
 }
 
-CNetAddr::CNetAddr(const char* pszIp)
+CNetAddr::CNetAddr(const char* pszIp, bool fAllowLookup)
 {
     Init();
     std::vector<CNetAddr> vIP;
-    if (LookupHost(pszIp, vIP, 1, false))
+    if (LookupHost(pszIp, vIP, 1, fAllowLookup))
         *this = vIP[0];
 }
 
-CNetAddr::CNetAddr(const std::string& strIp)
+CNetAddr::CNetAddr(const std::string& strIp, bool fAllowLookup)
 {
     Init();
     std::vector<CNetAddr> vIP;
-    if (LookupHost(strIp.c_str(), vIP, 1, false))
+    if (LookupHost(strIp.c_str(), vIP, 1, fAllowLookup))
         *this = vIP[0];
 }
 
@@ -1138,35 +1136,35 @@ bool CService::SetSockAddr(const struct sockaddr* paddr)
     }
 }
 
-CService::CService(const char* pszIpPort)
+CService::CService(const char* pszIpPort, bool fAllowLookup)
 {
     Init();
     CService ip;
-    if (Lookup(pszIpPort, ip, 0, false))
+    if (Lookup(pszIpPort, ip, 0, fAllowLookup))
         *this = ip;
 }
 
-CService::CService(const char* pszIpPort, int portDefault)
+CService::CService(const char* pszIpPort, int portDefault, bool fAllowLookup)
 {
     Init();
     CService ip;
-    if (Lookup(pszIpPort, ip, portDefault, false))
+    if (Lookup(pszIpPort, ip, portDefault, fAllowLookup))
         *this = ip;
 }
 
-CService::CService(const std::string& strIpPort)
+CService::CService(const std::string& strIpPort, bool fAllowLookup)
 {
     Init();
     CService ip;
-    if (Lookup(strIpPort.c_str(), ip, 0, false))
+    if (Lookup(strIpPort.c_str(), ip, 0, fAllowLookup))
         *this = ip;
 }
 
-CService::CService(const std::string& strIpPort, int portDefault)
+CService::CService(const std::string& strIpPort, int portDefault, bool fAllowLookup)
 {
     Init();
     CService ip;
-    if (Lookup(strIpPort.c_str(), ip, portDefault, false))
+    if (Lookup(strIpPort.c_str(), ip, portDefault, fAllowLookup))
         *this = ip;
 }
 
@@ -1258,7 +1256,7 @@ CSubNet::CSubNet() : valid(false)
     memset(netmask, 0, sizeof(netmask));
 }
 
-CSubNet::CSubNet(const std::string& strSubnet)
+CSubNet::CSubNet(const std::string& strSubnet, bool fAllowLookup)
 {
     size_t slash = strSubnet.find_last_of('/');
     std::vector<CNetAddr> vIP;
@@ -1268,8 +1266,7 @@ CSubNet::CSubNet(const std::string& strSubnet)
     memset(netmask, 255, sizeof(netmask));
 
     std::string strAddress = strSubnet.substr(0, slash);
-    if (LookupHost(strAddress.c_str(), vIP, 1, false))
-    {
+    if (LookupHost(strAddress.c_str(), vIP, 1, fAllowLookup)) {
         network = vIP[0];
         if (slash != strSubnet.npos) {
             std::string strNetmask = strSubnet.substr(slash + 1);

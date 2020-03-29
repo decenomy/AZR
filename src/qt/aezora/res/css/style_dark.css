@@ -576,35 +576,6 @@ QPushButton[cssClass="btn-check-connect"]:checked {
     border-bottom:2px solid #6b3dca;
 }
 
-/* Tor status*/
-
-QPushButton[cssClass="btn-check-tor"] {
-    qproperty-icon: url("://ic-check-tor") ;
-    qproperty-iconSize: 24px 24px;
-    color:#ffffff;
-    background-color:#50203f73;
-    border-bottom:2px solid #6b3dca;
-    border-radius:2px;
-}
-
-
-QPushButton[cssClass="btn-check-tor-inactive"] {
-    qproperty-icon: url("://ic-check-tor-off");
-    qproperty-iconSize: 24px 24px;
-    color:#B3FFFFFF;
-    background-color:#40203f73;
-    border-bottom:2px solid #203f73;
-    border-radius:2px;
-}
-
-QPushButton[cssClass="btn-check-tor"]:checked {
-    background-color:#50203f73;
-    color:#ffffff;
-    border-bottom:2px solid #6b3dca;
-}
-
-/* End tor status*/
-
 QPushButton[cssClass="btn-check-status-lock"] {
     background-color:#50203f73;
     border-bottom:2px solid #6b3dca;
@@ -2044,7 +2015,7 @@ HH       SPIN BOX
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
 
-QSpinBox[cssClass="btn-spin-box"], QDoubleSpinBox[cssClass="btn-spin-box"] {
+QSpinBox[cssClass="btn-spin-box"] {
     background-color:#0b121f;
     padding:10px 20px 10px 10px;
     font-size:16px;
@@ -2055,7 +2026,7 @@ QSpinBox[cssClass="btn-spin-box"], QDoubleSpinBox[cssClass="btn-spin-box"] {
 }
 
 
-QSpinBox[cssClass="btn-spin-box"]::up-button, QDoubleSpinBox[cssClass="btn-spin-box"]::up-button {
+QSpinBox[cssClass="btn-spin-box"]::up-button {
     image: url("://ic-arrow-drop-up-purple");
     subcontrol-position: top right; width: 20px; height: 20px;
     border: 0px;
@@ -2063,7 +2034,7 @@ QSpinBox[cssClass="btn-spin-box"]::up-button, QDoubleSpinBox[cssClass="btn-spin-
     margin:0px 5px 0px 0px;
 }
 
-QSpinBox[cssClass="btn-spin-box"]::down-button, QDoubleSpinBox[cssClass="btn-spin-box"]::down-button {
+QSpinBox[cssClass="btn-spin-box"]::down-button {
     image: url("://ic-arrow-drop-down-purple");
     subcontrol-position: bottom right; width: 20px; height: 20px;
     border: 0px;
@@ -2254,14 +2225,14 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 QScrollBar:vertical {
     border: 0px solid #bababa;
     background:#0b121f;
-    width:7px;
+    width:4px;
     margin: 0px 0px 0px 0px;
 }
 
 
 QScrollBar::handle:vertical {
     background: #203f73;
-    min-height: 10px;
+    min-height: 0px;
 }
 
 QScrollBar::add-line:vertical {
