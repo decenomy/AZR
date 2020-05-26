@@ -5,7 +5,8 @@
 #ifndef SENDCHANGEADDRESSDIALOG_H
 #define SENDCHANGEADDRESSDIALOG_H
 
-#include <QDialog>
+#include "qt/aezora/focuseddialog.h"
+#include "qt/aezora/snackbar.h"
 
 class WalletModel;
 
@@ -13,21 +14,28 @@ namespace Ui {
 class SendChangeAddressDialog;
 }
 
-class SendChangeAddressDialog : public QDialog
+class SendChangeAddressDialog : public FocusedDialog
 {
     Q_OBJECT
 
 public:
-    explicit SendChangeAddressDialog(QWidget *parent = nullptr);
+    explicit SendChangeAddressDialog(QWidget* parent, WalletModel* model);
     ~SendChangeAddressDialog();
 
     void setAddress(QString address);
-    bool getAddress(WalletModel *model, QString *retAddress);
-    bool selected = false;
+    QString getAddress() const;
 
-    void showEvent(QShowEvent *event) override;
+    void showEvent(QShowEvent* event) override;
+
 private:
+    WalletModel* walletModel;
     Ui::SendChangeAddressDialog *ui;
+    SnackBar *snackBar = nullptr;
+    void inform(const QString& text);
+
+private Q_SLOTS:
+    void reset();
+    void accept() override;
 };
 
 #endif // SENDCHANGEADDRESSDIALOG_H

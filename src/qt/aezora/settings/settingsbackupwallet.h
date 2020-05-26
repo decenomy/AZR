@@ -20,14 +20,12 @@ public:
     explicit SettingsBackupWallet(AEZORAGUI* _window, QWidget *parent = nullptr);
     ~SettingsBackupWallet();
 
-private slots:
-    void backupWallet();
+private Q_SLOTS:
     void selectFileOutput();
     void changePassphrase();
 
 private:
     Ui::SettingsBackupWallet *ui;
-    QString filename;
 };
 
 #endif // SETTINGSBACKUPWALLET_H

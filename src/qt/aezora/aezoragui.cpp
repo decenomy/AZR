@@ -18,6 +18,10 @@
 #include "qt/aezora/defaultdialog.h"
 #include "qt/aezora/settings/settingsfaqwidget.h"
 
+#include "init.h"
+#include "util.h"
+
+#include <QDesktopWidget>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QApplication>
@@ -26,10 +30,11 @@
 #include <QKeySequence>
 #include <QWindowStateChangeEvent>
 
-#include "util.h"
 
 #define BASE_WINDOW_WIDTH 1200
 #define BASE_WINDOW_HEIGHT 740
+#define BASE_WINDOW_MIN_HEIGHT 620
+#define BASE_WINDOW_MIN_WIDTH 1100
 
 
 const QString AEZORAGUI::DEFAULT_WALLET = "~Default";
@@ -40,8 +45,18 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
 
     /* Open CSS when configured */
     this->setStyleSheet(GUIUtil::loadStyleSheet());
-    this->setMinimumSize(BASE_WINDOW_WIDTH, BASE_WINDOW_HEIGHT);
-    GUIUtil::restoreWindowGeometry("nWindow", QSize(BASE_WINDOW_WIDTH, BASE_WINDOW_HEIGHT), this);
+    this->setMinimumSize(BASE_WINDOW_MIN_WIDTH, BASE_WINDOW_MIN_HEIGHT);
+
+
+    // Adapt screen size
+    QRect rec = QApplication::desktop()->screenGeometry();
+    int adaptedHeight = (rec.height() < BASE_WINDOW_HEIGHT) ?  BASE_WINDOW_MIN_HEIGHT : BASE_WINDOW_HEIGHT;
+    int adaptedWidth = (rec.width() < BASE_WINDOW_WIDTH) ?  BASE_WINDOW_MIN_WIDTH : BASE_WINDOW_WIDTH;
+    GUIUtil::restoreWindowGeometry(
+            "nWindow",
+            QSize(adaptedWidth, adaptedHeight),
+            this
+    );
 
 #ifdef ENABLE_WALLET
     /* if compiled with wallet support, -disablewallet can still disable the wallet */
@@ -50,28 +65,23 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
     enableWallet = false;
 #endif // ENABLE_WALLET
 
-    QString windowTitle = tr("AEZORA Core") + " - ";
-    windowTitle += ((enableWallet) ? tr("Wallet") : tr("Node"));
+    QString windowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
+    if (windowTitle.isEmpty()) {
+        windowTitle = tr("AEZORA Core") + " - ";
+        windowTitle += ((enableWallet) ? tr("Wallet") : tr("Node"));
+    }
     windowTitle += " " + networkStyle->getTitleAddText();
     setWindowTitle(windowTitle);
 
-#ifndef Q_OS_MAC
     QApplication::setWindowIcon(networkStyle->getAppIcon());
     setWindowIcon(networkStyle->getAppIcon());
-#else
-    MacDockIconHandler::instance()->setIcon(networkStyle->getAppIcon());
-#endif
-
-
-
 
 #ifdef ENABLE_WALLET
     // Create wallet frame
-    if(enableWallet){
-
+    if (enableWallet) {
         QFrame* centralWidget = new QFrame(this);
-        this->setMinimumWidth(BASE_WINDOW_WIDTH);
-        this->setMinimumHeight(BASE_WINDOW_HEIGHT);
+        this->setMinimumWidth(BASE_WINDOW_MIN_WIDTH);
+        this->setMinimumHeight(BASE_WINDOW_MIN_HEIGHT);
         QHBoxLayout* centralWidgetLayouot = new QHBoxLayout();
         centralWidget->setLayout(centralWidgetLayouot);
         centralWidgetLayouot->setContentsMargins(0,0,0,0);
@@ -115,7 +125,6 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         sendWidget = new SendWidget(this);
         receiveWidget = new ReceiveWidget(this);
         addressesWidget = new AddressesWidget(this);
-        privacyWidget = new PrivacyWidget(this);
         masterNodesWidget = new MasterNodesWidget(this);
         coldStakingWidget = new ColdStakingWidget(this);
         settingsWidget = new SettingsWidget(this);
@@ -125,7 +134,6 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
         stackedContainer->addWidget(sendWidget);
         stackedContainer->addWidget(receiveWidget);
         stackedContainer->addWidget(addressesWidget);
-        stackedContainer->addWidget(privacyWidget);
         stackedContainer->addWidget(masterNodesWidget);
         stackedContainer->addWidget(coldStakingWidget);
         stackedContainer->addWidget(settingsWidget);
@@ -158,7 +166,8 @@ AEZORAGUI::AEZORAGUI(const NetworkStyle* networkStyle, QWidget* parent) :
 
 }
 
-void AEZORAGUI::createActions(const NetworkStyle* networkStyle){
+void AEZORAGUI::createActions(const NetworkStyle* networkStyle)
+{
     toggleHideAction = new QAction(networkStyle->getAppIcon(), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
@@ -167,14 +176,15 @@ void AEZORAGUI::createActions(const NetworkStyle* networkStyle){
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
 
-    connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(toggleHideAction, &QAction::triggered, this, &AEZORAGUI::toggleHidden);
+    connect(quitAction, &QAction::triggered, qApp, &QApplication::quit);
 }
 
 /**
  * Here add every event connection
  */
-void AEZORAGUI::connectActions() {
+void AEZORAGUI::connectActions()
+{
     QShortcut *consoleShort = new QShortcut(this);
     consoleShort->setKey(QKeySequence(SHORT_KEY + Qt::Key_C));
     connect(consoleShort, &QShortcut::activated, [this](){
@@ -189,7 +199,6 @@ void AEZORAGUI::connectActions() {
     connect(sendWidget, &SendWidget::showHide, this, &AEZORAGUI::showHide);
     connect(receiveWidget, &ReceiveWidget::showHide, this, &AEZORAGUI::showHide);
     connect(addressesWidget, &AddressesWidget::showHide, this, &AEZORAGUI::showHide);
-    connect(privacyWidget, &PrivacyWidget::showHide, this, &AEZORAGUI::showHide);
     connect(masterNodesWidget, &MasterNodesWidget::showHide, this, &AEZORAGUI::showHide);
     connect(masterNodesWidget, &MasterNodesWidget::execDialog, this, &AEZORAGUI::execDialog);
     connect(coldStakingWidget, &ColdStakingWidget::showHide, this, &AEZORAGUI::showHide);
@@ -198,7 +207,8 @@ void AEZORAGUI::connectActions() {
 }
 
 
-void AEZORAGUI::createTrayIcon(const NetworkStyle* networkStyle) {
+void AEZORAGUI::createTrayIcon(const NetworkStyle* networkStyle)
+{
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
     QString toolTip = tr("AEZORA Core client") + " " + networkStyle->getTitleAddText();
@@ -209,8 +219,8 @@ void AEZORAGUI::createTrayIcon(const NetworkStyle* networkStyle) {
     notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
 }
 
-//
-AEZORAGUI::~AEZORAGUI() {
+AEZORAGUI::~AEZORAGUI()
+{
     // Unsubscribe from notifications from core
     unsubscribeFromCoreSignals();
 
@@ -224,16 +234,17 @@ AEZORAGUI::~AEZORAGUI() {
 
 
 /** Get restart command-line parameters and request restart */
-void AEZORAGUI::handleRestart(QStringList args){
+void AEZORAGUI::handleRestart(QStringList args)
+{
     if (!ShutdownRequested())
-        emit requestedRestart(args);
+        Q_EMIT requestedRestart(args);
 }
 
 
-void AEZORAGUI::setClientModel(ClientModel* clientModel) {
+void AEZORAGUI::setClientModel(ClientModel* clientModel)
+{
     this->clientModel = clientModel;
-    if(this->clientModel) {
-
+    if (this->clientModel) {
         // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
         // while the client has not yet fully loaded
         createTrayIconMenu();
@@ -244,9 +255,9 @@ void AEZORAGUI::setClientModel(ClientModel* clientModel) {
         settingsWidget->setClientModel(clientModel);
 
         // Receive and report messages from client model
-        connect(clientModel, SIGNAL(message(QString, QString, unsigned int)), this, SLOT(message(QString, QString, unsigned int)));
-        connect(topBar, SIGNAL(walletSynced(bool)), dashboard, SLOT(walletSynced(bool)));
-        connect(topBar, SIGNAL(walletSynced(bool)), coldStakingWidget, SLOT(walletSynced(bool)));
+        connect(clientModel, &ClientModel::message, this, &AEZORAGUI::message);
+        connect(topBar, &TopBar::walletSynced, dashboard, &DashboardWidget::walletSynced);
+        connect(topBar, &TopBar::walletSynced, coldStakingWidget, &ColdStakingWidget::walletSynced);
 
         // Get restart command-line parameters and handle restart
         connect(settingsWidget, &SettingsWidget::handleRestart, [this](QStringList arg){handleRestart(arg);});
@@ -268,29 +279,31 @@ void AEZORAGUI::setClientModel(ClientModel* clientModel) {
     }
 }
 
-void AEZORAGUI::createTrayIconMenu() {
+void AEZORAGUI::createTrayIconMenu()
+{
 #ifndef Q_OS_MAC
-    // return if trayIcon is unset (only on non-Mac OSes)
+    // return if trayIcon is unset (only on non-macOSes)
     if (!trayIcon)
         return;
 
     trayIconMenu = new QMenu(this);
     trayIcon->setContextMenu(trayIconMenu);
 
-    connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-            this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
+    connect(trayIcon, &QSystemTrayIcon::activated, this, &AEZORAGUI::trayIconActivated);
 #else
-    // Note: On Mac, the dock icon is used to provide the tray's functionality.
+    // Note: On macOS, the Dock icon is used to provide the tray's functionality.
     MacDockIconHandler* dockIconHandler = MacDockIconHandler::instance();
-    dockIconHandler->setMainWindow((QMainWindow*)this);
-    trayIconMenu = dockIconHandler->dockMenu();
+    connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, this, &AEZORAGUI::macosDockIconActivated);
+
+    trayIconMenu = new QMenu(this);
+    trayIconMenu->setAsDockMenu();
 #endif
 
-    // Configuration of the tray icon (or dock icon) icon menu
+    // Configuration of the tray icon (or Dock icon) icon menu
     trayIconMenu->addAction(toggleHideAction);
     trayIconMenu->addSeparator();
 
-#ifndef Q_OS_MAC // This is built-in on Mac
+#ifndef Q_OS_MAC // This is built-in on macOS
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(quitAction);
 #endif
@@ -304,6 +317,12 @@ void AEZORAGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
         toggleHidden();
     }
 }
+#else
+void AEZORAGUI::macosDockIconActivated()
+ {
+     show();
+     activateWindow();
+ }
 #endif
 
 void AEZORAGUI::changeEvent(QEvent* e)
@@ -314,7 +333,7 @@ void AEZORAGUI::changeEvent(QEvent* e)
         if (clientModel && clientModel->getOptionsModel() && clientModel->getOptionsModel()->getMinimizeToTray()) {
             QWindowStateChangeEvent* wsevt = static_cast<QWindowStateChangeEvent*>(e);
             if (!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized()) {
-                QTimer::singleShot(0, this, SLOT(hide()));
+                QTimer::singleShot(0, this, &AEZORAGUI::hide);
                 e->ignore();
             }
         }
@@ -335,15 +354,17 @@ void AEZORAGUI::closeEvent(QCloseEvent* event)
 }
 
 
-void AEZORAGUI::messageInfo(const QString& text){
-    if(!this->snackBar) this->snackBar = new SnackBar(this, this);
+void AEZORAGUI::messageInfo(const QString& text)
+{
+    if (!this->snackBar) this->snackBar = new SnackBar(this, this);
     this->snackBar->setText(text);
     this->snackBar->resize(this->width(), snackBar->height());
     openDialog(this->snackBar, this);
 }
 
 
-void AEZORAGUI::message(const QString& title, const QString& message, unsigned int style, bool* ret) {
+void AEZORAGUI::message(const QString& title, const QString& message, unsigned int style, bool* ret)
+{
     QString strTitle =  tr("AEZORA Core"); // default title
     // Default to information icon
     int nNotifyIcon = Notificator::Information;
@@ -382,18 +403,18 @@ void AEZORAGUI::message(const QString& title, const QString& message, unsigned i
         // Check for buttons, use OK as default, if none was supplied
         int r = 0;
         showNormalIfMinimized();
-        if(style & CClientUIInterface::BTN_MASK){
+        if (style & CClientUIInterface::BTN_MASK) {
             r = openStandardDialog(
                     (title.isEmpty() ? strTitle : title), message, "OK", "CANCEL"
                 );
-        }else{
+        } else {
             r = openStandardDialog((title.isEmpty() ? strTitle : title), message, "OK");
         }
         if (ret != NULL)
             *ret = r;
-    } else if(style & CClientUIInterface::MSG_INFORMATION_SNACK){
+    } else if (style & CClientUIInterface::MSG_INFORMATION_SNACK) {
         messageInfo(message);
-    }else {
+    } else {
         // Append title to "AEZORA - "
         if (!msgType.isEmpty())
             strTitle += " - " + msgType;
@@ -401,7 +422,8 @@ void AEZORAGUI::message(const QString& title, const QString& message, unsigned i
     }
 }
 
-bool AEZORAGUI::openStandardDialog(QString title, QString body, QString okBtn, QString cancelBtn){
+bool AEZORAGUI::openStandardDialog(QString title, QString body, QString okBtn, QString cancelBtn)
+{
     DefaultDialog *dialog;
     if (isVisible()) {
         showHide(true);
@@ -423,28 +445,24 @@ bool AEZORAGUI::openStandardDialog(QString title, QString body, QString okBtn, Q
 }
 
 
-void AEZORAGUI::showNormalIfMinimized(bool fToggleHidden) {
+void AEZORAGUI::showNormalIfMinimized(bool fToggleHidden)
+{
     if (!clientModel)
         return;
-    // activateWindow() (sometimes) helps with keyboard focus on Windows
-    if (isHidden()) {
-        show();
-        activateWindow();
-    } else if (isMinimized()) {
-        showNormal();
-        activateWindow();
-    } else if (GUIUtil::isObscured(this)) {
-        raise();
-        activateWindow();
-    } else if (fToggleHidden)
+    if (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this) && fToggleHidden) {
         hide();
+    } else {
+        GUIUtil::bringToFront(this);
+    }
 }
 
-void AEZORAGUI::toggleHidden() {
+void AEZORAGUI::toggleHidden()
+{
     showNormalIfMinimized(true);
 }
 
-void AEZORAGUI::detectShutdown() {
+void AEZORAGUI::detectShutdown()
+{
     if (ShutdownRequested()) {
         if (rpcConsole)
             rpcConsole->hide();
@@ -452,30 +470,36 @@ void AEZORAGUI::detectShutdown() {
     }
 }
 
-void AEZORAGUI::goToDashboard(){
-    if(stackedContainer->currentWidget() != dashboard){
+void AEZORAGUI::goToDashboard()
+{
+    if (stackedContainer->currentWidget() != dashboard) {
         stackedContainer->setCurrentWidget(dashboard);
         topBar->showBottom();
     }
 }
 
-void AEZORAGUI::goToSend(){
+void AEZORAGUI::goToSend()
+{
     showTop(sendWidget);
 }
 
-void AEZORAGUI::goToAddresses(){
+void AEZORAGUI::goToAddresses()
+{
     showTop(addressesWidget);
 }
 
-void AEZORAGUI::goToPrivacy(){
-    showTop(privacyWidget);
+void AEZORAGUI::goToPrivacy()
+{
+    if (privacyWidget) showTop(privacyWidget);
 }
 
-void AEZORAGUI::goToMasterNodes(){
+void AEZORAGUI::goToMasterNodes()
+{
     showTop(masterNodesWidget);
 }
 
-void AEZORAGUI::goToColdStaking(){
+void AEZORAGUI::goToColdStaking()
+{
     showTop(coldStakingWidget);
 }
 
@@ -483,51 +507,57 @@ void AEZORAGUI::goToSettings(){
     showTop(settingsWidget);
 }
 
-void AEZORAGUI::goToReceive(){
+void AEZORAGUI::goToReceive()
+{
     showTop(receiveWidget);
 }
 
-void AEZORAGUI::showTop(QWidget* view){
-    if(stackedContainer->currentWidget() != view){
+void AEZORAGUI::showTop(QWidget* view)
+{
+    if (stackedContainer->currentWidget() != view) {
         stackedContainer->setCurrentWidget(view);
         topBar->showTop();
     }
 }
 
-void AEZORAGUI::changeTheme(bool isLightTheme){
+void AEZORAGUI::changeTheme(bool isLightTheme)
+{
 
     QString css = GUIUtil::loadStyleSheet();
     this->setStyleSheet(css);
 
     // Notify
-    emit themeChanged(isLightTheme, css);
+    Q_EMIT themeChanged(isLightTheme, css);
 
     // Update style
     updateStyle(this);
 }
 
-void AEZORAGUI::resizeEvent(QResizeEvent* event){
+void AEZORAGUI::resizeEvent(QResizeEvent* event)
+{
     // Parent..
     QMainWindow::resizeEvent(event);
     // background
     showHide(opEnabled);
     // Notify
-    emit windowResizeEvent(event);
+    Q_EMIT windowResizeEvent(event);
 }
 
-bool AEZORAGUI::execDialog(QDialog *dialog, int xDiv, int yDiv){
+bool AEZORAGUI::execDialog(QDialog *dialog, int xDiv, int yDiv)
+{
     return openDialogWithOpaqueBackgroundY(dialog, this);
 }
 
-void AEZORAGUI::showHide(bool show){
-    if(!op) op = new QLabel(this);
-    if(!show){
+void AEZORAGUI::showHide(bool show)
+{
+    if (!op) op = new QLabel(this);
+    if (!show) {
         op->setVisible(false);
         opEnabled = false;
-    }else{
+    } else {
         QColor bg("#000000");
         bg.setAlpha(200);
-        if(!isLightTheme()){
+        if (!isLightTheme()) {
             bg = QColor("#00000000");
             bg.setAlpha(150);
         }
@@ -546,11 +576,13 @@ void AEZORAGUI::showHide(bool show){
     }
 }
 
-int AEZORAGUI::getNavWidth(){
+int AEZORAGUI::getNavWidth()
+{
     return this->navMenu->width();
 }
 
-void AEZORAGUI::openFAQ(int section){
+void AEZORAGUI::openFAQ(int section)
+{
     showHide(true);
     SettingsFaqWidget* dialog = new SettingsFaqWidget(this);
     if (section > 0) dialog->setSection(section);
@@ -563,7 +595,7 @@ void AEZORAGUI::openFAQ(int section){
 bool AEZORAGUI::addWallet(const QString& name, WalletModel* walletModel)
 {
     // Single wallet supported for now..
-    if(!stackedContainer || !clientModel || !walletModel)
+    if (!stackedContainer || !clientModel || !walletModel)
         return false;
 
     // set the model for every view
@@ -573,15 +605,24 @@ bool AEZORAGUI::addWallet(const QString& name, WalletModel* walletModel)
     receiveWidget->setWalletModel(walletModel);
     sendWidget->setWalletModel(walletModel);
     addressesWidget->setWalletModel(walletModel);
-    privacyWidget->setWalletModel(walletModel);
     masterNodesWidget->setWalletModel(walletModel);
     coldStakingWidget->setWalletModel(walletModel);
     settingsWidget->setWalletModel(walletModel);
 
+    // Privacy screen
+    if (walletModel->getZerocoinBalance() > 0) {
+        privacyWidget = new PrivacyWidget(this);
+        stackedContainer->addWidget(privacyWidget);
+
+        privacyWidget->setWalletModel(walletModel);
+        connect(privacyWidget, &PrivacyWidget::message, this, &AEZORAGUI::message);
+        connect(privacyWidget, &PrivacyWidget::showHide, this, &AEZORAGUI::showHide);
+    }
+
     // Connect actions..
-    connect(privacyWidget, &PrivacyWidget::message, this, &AEZORAGUI::message);
+    connect(walletModel, &WalletModel::message, this, &AEZORAGUI::message);
     connect(masterNodesWidget, &MasterNodesWidget::message, this, &AEZORAGUI::message);
-    connect(coldStakingWidget, &MasterNodesWidget::message, this, &AEZORAGUI::message);
+    connect(coldStakingWidget, &ColdStakingWidget::message, this, &AEZORAGUI::message);
     connect(topBar, &TopBar::message, this, &AEZORAGUI::message);
     connect(sendWidget, &SendWidget::message,this, &AEZORAGUI::message);
     connect(receiveWidget, &ReceiveWidget::message,this, &AEZORAGUI::message);
@@ -589,23 +630,26 @@ bool AEZORAGUI::addWallet(const QString& name, WalletModel* walletModel)
     connect(settingsWidget, &SettingsWidget::message, this, &AEZORAGUI::message);
 
     // Pass through transaction notifications
-    connect(dashboard, SIGNAL(incomingTransaction(QString, int, CAmount, QString, QString)), this, SLOT(incomingTransaction(QString, int, CAmount, QString, QString)));
+    connect(dashboard, &DashboardWidget::incomingTransaction, this, &AEZORAGUI::incomingTransaction);
 
     return true;
 }
 
-bool AEZORAGUI::setCurrentWallet(const QString& name) {
+bool AEZORAGUI::setCurrentWallet(const QString& name)
+{
     // Single wallet supported.
     return true;
 }
 
-void AEZORAGUI::removeAllWallets() {
+void AEZORAGUI::removeAllWallets()
+{
     // Single wallet supported.
 }
 
-void AEZORAGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address) {
+void AEZORAGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address)
+{
     // Only send notifications when not disabled
-    if(!bdisableSystemnotifications){
+    if (!bdisableSystemnotifications) {
         // On new transaction, make an info balloon
         message((amount) < 0 ? (pwalletMain->fMultiSendNotify == true ? tr("Sent MultiSend transaction") : tr("Sent transaction")) : tr("Incoming transaction"),
             tr("Date: %1\n"

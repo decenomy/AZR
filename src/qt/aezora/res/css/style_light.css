@@ -401,6 +401,31 @@ QPushButton[cssClass="btn-qr"] {
     border-radius:2px;
 }
 
+/** btn HD Upgrade */
+
+QPushButton[cssClass="btn-check-hd-upgrade"] {
+    background-color:#50203f73;
+    color:#FFFFFF;
+    font-weight: bold;
+    font-size: 15px;
+    padding-right:6px;
+    padding-left:6px;
+    border-bottom:2px solid #b088ff;
+    border-radius:2px;
+}
+
+QPushButton[cssClass="btn-check-hd-upgrade"]:hover {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+QPushButton[cssClass="btn-check-hd-upgrade"]:checked {
+    background-color:#50203f73;
+    border-bottom:2px solid #b088ff;
+    border-radius:2px;
+}
+
+/** End btn HD Upgrade */
 
 QPushButton[cssClass="btn-check-faq"] {
     qproperty-icon: url("://ic-check-faq");
@@ -586,6 +611,35 @@ QPushButton[cssClass="btn-check-connect"]:checked {
     color:#ffffff;
     border-bottom:2px solid #6b3dca;
 }
+
+/* Tor status*/
+
+QPushButton[cssClass="btn-check-tor"] {
+    qproperty-icon: url("://ic-check-tor") ;
+    qproperty-iconSize: 24px 24px;
+    color:#ffffff;
+    background-color:#50203f73;
+    border-bottom:2px solid #b088ff;
+    border-radius:2px;
+}
+
+
+QPushButton[cssClass="btn-check-tor-inactive"] {
+    qproperty-icon: url("://ic-check-tor-off");
+    qproperty-iconSize: 24px 24px;
+    color:#B3FFFFFF;
+    background-color:#405c4b7d;
+    border-bottom:2px solid #5C4B7D;
+    border-radius:2px;
+}
+
+QPushButton[cssClass="btn-check-tor"]:checked {
+    background-color:#50203f73;
+    color:#ffffff;
+    border-bottom:2px solid #b088ff;
+}
+
+/* End tor status*/
 
 QPushButton[cssClass="btn-check-status-lock"] {
     background-color:#50203f73;
@@ -969,6 +1023,11 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 *[cssClass="text-main-grey"] {
     color:#707070;
     font-size:17px;
+}
+
+*[cssClass="text-main-hash"] {
+    color:#707070;
+    font-size:12px;
 }
 
 *[cssClass="text-main-settings"] {
@@ -2064,6 +2123,21 @@ QComboBox[cssClass="btn-combo"]::down-arrow {
     image: url("://ic-arrow-drop-down");
     width: 24px;
     height: 24px;
+}
+
+QComboBox[cssClass="btn-combo-small"] {
+    background-color:#ffffff;
+    padding:8px 14px 8px 8px;
+    font-size:13px;
+    border:1px solid #ffffff;
+    color: #707070;
+    text-align: right;
+}
+
+QComboBox[cssClass="btn-combo-small"]::down-arrow {
+    image: url("://ic-arrow-drop-down");
+    width: 15px;
+    height: 15px;
 }
 
 QComboBox[cssClass="btn-combo-edit"] {

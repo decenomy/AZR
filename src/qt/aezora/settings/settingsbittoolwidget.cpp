@@ -32,47 +32,34 @@ SettingsBitToolWidget::SettingsBitToolWidget(AEZORAGUI* _window, QWidget *parent
     ui->left->setContentsMargins(10,10,10,10);
 
     /* Title */
-    ui->labelTitle->setText(tr("BIP38 Tool"));
     setCssTitleScreen(ui->labelTitle);
 
     //Button Group
-    ui->pushLeft->setText(tr("Encrypt"));
     setCssProperty(ui->pushLeft, "btn-check-left");
-    ui->pushRight->setText(tr("Decrypt"));
     setCssProperty(ui->pushRight, "btn-check-right");
     ui->pushLeft->setChecked(true);
 
     // Subtitle
-    ui->labelSubtitle1->setText("Encrypt your AEZORA addresses (key pair actually) using BIP38 encryption.\nUsing this mechanism you can share your keys without middle-man risk, only need to store your passphrase safely.");
     setCssSubtitleScreen(ui->labelSubtitle1);
 
     // Key
-    ui->labelSubtitleKey->setText(tr("Encrypted key"));
     setCssProperty(ui->labelSubtitleKey, "text-title");
-    ui->lineEditKey->setPlaceholderText(tr("Enter a encrypted key"));
     initCssEditLine(ui->lineEditKey);
 
     // Passphrase
-    ui->labelSubtitlePassphrase->setText(tr("Passphrase"));
     setCssProperty(ui->labelSubtitlePassphrase, "text-title");
-
-    ui->lineEditPassphrase->setPlaceholderText(tr("Enter a passphrase "));
     initCssEditLine(ui->lineEditPassphrase);
 
     // Decrypt controls
-    ui->labelSubtitleDecryptResult->setText(tr("Decrypted address result"));
     setCssProperty(ui->labelSubtitleDecryptResult, "text-title");
-    ui->lineEditDecryptResult->setPlaceholderText(tr("Decrypted Address"));
     ui->lineEditDecryptResult->setAttribute(Qt::WA_MacShowFocusRect, 0);
     ui->lineEditDecryptResult->setReadOnly(true);
     initCssEditLine(ui->lineEditDecryptResult);
 
     // Buttons
-    ui->pushButtonDecrypt->setText(tr("DECRYPT KEY"));
     setCssBtnPrimary(ui->pushButtonDecrypt);
-
-    ui->pushButtonImport->setText(tr("Import Address"));
     setCssProperty(ui->pushButtonImport, "btn-text-primary");
+    ui->pushButtonImport->setVisible(false);
 
     connect(ui->pushLeft, &QPushButton::clicked, [this](){onEncryptSelected(true);});
     connect(ui->pushRight,  &QPushButton::clicked, [this](){onEncryptSelected(false);});
@@ -81,35 +68,24 @@ SettingsBitToolWidget::SettingsBitToolWidget(AEZORAGUI* _window, QWidget *parent
     // Encrypt
 
     // Address
-    ui->labelSubtitleAddress->setText(tr("Enter a AEZORA address"));
     setCssProperty(ui->labelSubtitleAddress, "text-title");
-
-    ui->addressIn_ENC->setPlaceholderText(tr("Add address"));
     setCssProperty(ui->addressIn_ENC, "edit-primary-multi-book");
     ui->addressIn_ENC->setAttribute(Qt::WA_MacShowFocusRect, 0);
     setShadow(ui->addressIn_ENC);
 
     // Message
-    ui->labelSubtitleMessage->setText(tr("Passphrase"));
     setCssProperty(ui->labelSubtitleMessage, "text-title");
-
     setCssProperty(ui->passphraseIn_ENC, "edit-primary");
-    ui->passphraseIn_ENC->setPlaceholderText(tr("Write a message"));
-    setCssProperty(ui->passphraseIn_ENC,"edit-primary");
     setShadow(ui->passphraseIn_ENC);
     ui->passphraseIn_ENC->setAttribute(Qt::WA_MacShowFocusRect, 0);
 
-    ui->labelSubtitleEncryptedKey->setText(tr("Encrypted Key"));
+    // Encrypted Key
     setCssProperty(ui->labelSubtitleEncryptedKey, "text-title");
-    ui->encryptedKeyOut_ENC->setPlaceholderText(tr("Encrypted key"));
     ui->encryptedKeyOut_ENC->setAttribute(Qt::WA_MacShowFocusRect, 0);
     ui->encryptedKeyOut_ENC->setReadOnly(true);
     initCssEditLine(ui->encryptedKeyOut_ENC);
 
     btnContact = ui->addressIn_ENC->addAction(QIcon("://ic-contact-arrow-down"), QLineEdit::TrailingPosition);
-    ui->pushButtonEncrypt->setText(tr("ENCRYPT"));
-    ui->pushButtonClear->setText(tr("CLEAR ALL"));
-    ui->pushButtonDecryptClear->setText(tr("CLEAR"));
     setCssBtnPrimary(ui->pushButtonEncrypt);
     setCssBtnSecondary(ui->pushButtonClear);
     setCssBtnSecondary(ui->pushButtonDecryptClear);
@@ -118,24 +94,27 @@ SettingsBitToolWidget::SettingsBitToolWidget(AEZORAGUI* _window, QWidget *parent
     ui->statusLabel_DEC->setStyleSheet("QLabel { color: transparent; }");
 
     connect(ui->pushButtonEncrypt, &QPushButton::clicked, this, &SettingsBitToolWidget::onEncryptKeyButtonENCClicked);
-    connect(ui->pushButtonDecrypt, SIGNAL(clicked()), this, SLOT(onDecryptClicked()));
-    connect(ui->pushButtonImport, SIGNAL(clicked()), this, SLOT(importAddressFromDecKey()));
-    connect(btnContact, SIGNAL(triggered()), this, SLOT(onAddressesClicked()));
+    connect(ui->pushButtonDecrypt, &QPushButton::clicked, this, &SettingsBitToolWidget::onDecryptClicked);
+    connect(ui->pushButtonImport, &QPushButton::clicked, this, &SettingsBitToolWidget::importAddressFromDecKey);
+    connect(btnContact, &QAction::triggered, this, &SettingsBitToolWidget::onAddressesClicked);
     connect(ui->pushButtonClear, &QPushButton::clicked, this, &SettingsBitToolWidget::onClearAll);
-    connect(ui->pushButtonDecryptClear, SIGNAL(clicked()), this, SLOT(onClearDecrypt()));
+    connect(ui->pushButtonDecryptClear, &QPushButton::clicked, this, &SettingsBitToolWidget::onClearDecrypt);
 }
 
-void SettingsBitToolWidget::setAddress_ENC(const QString& address){
+void SettingsBitToolWidget::setAddress_ENC(const QString& address)
+{
     ui->addressIn_ENC->setText(address);
     ui->passphraseIn_ENC->setFocus();
 }
 
-void SettingsBitToolWidget::onEncryptSelected(bool isEncr) {
+void SettingsBitToolWidget::onEncryptSelected(bool isEncr)
+{
     ui->stackedWidget->setCurrentIndex(isEncr);
 }
 
 QString specialChar = "\"@!#$%&'()*+,-./:;<=>?`{|}~^_[]\\";
 QString validChar = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" + specialChar;
+
 bool isValidPassphrase(QString strPassphrase, QString& strInvalid)
 {
     for (int i = 0; i < strPassphrase.size(); i++) {
@@ -179,7 +158,7 @@ void SettingsBitToolWidget::onEncryptKeyButtonENCClicked()
         return;
     }
 
-    WalletModel::UnlockContext ctx(walletModel->requestUnlock(AskPassphraseDialog::Context::BIP_38, true));
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if (!ctx.isValid()) {
         ui->statusLabel_ENC->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_ENC->setText(tr("Wallet unlock was cancelled."));
@@ -200,7 +179,8 @@ void SettingsBitToolWidget::onEncryptKeyButtonENCClicked()
     ui->statusLabel_ENC->setText(QString("<nobr>") + tr("Address encrypted.") + QString("</nobr>"));
 }
 
-void SettingsBitToolWidget::onClearAll(){
+void SettingsBitToolWidget::onClearAll()
+{
     ui->addressIn_ENC->clear();
     ui->passphraseIn_ENC->clear();
     ui->encryptedKeyOut_ENC->clear();
@@ -208,9 +188,10 @@ void SettingsBitToolWidget::onClearAll(){
     ui->addressIn_ENC->setFocus();
 }
 
-void SettingsBitToolWidget::onAddressesClicked(){
+void SettingsBitToolWidget::onAddressesClicked()
+{
     int addressSize = walletModel->getAddressTableModel()->sizeRecv();
-    if(addressSize == 0) {
+    if (addressSize == 0) {
         inform(tr("No addresses available, you can go to the receive screen and add some there!"));
         return;
     }
@@ -218,7 +199,7 @@ void SettingsBitToolWidget::onAddressesClicked(){
     int height = (addressSize <= 2) ? ui->addressIn_ENC->height() * ( 2 * (addressSize + 1 )) : ui->addressIn_ENC->height() * 4;
     int width = ui->containerAddressEnc->width();
 
-    if(!menuContacts){
+    if (!menuContacts) {
         menuContacts = new ContactsDropdown(
                 width,
                 height,
@@ -231,7 +212,7 @@ void SettingsBitToolWidget::onAddressesClicked(){
 
     }
 
-    if(menuContacts->isVisible()){
+    if (menuContacts->isVisible()) {
         menuContacts->hide();
         return;
     }
@@ -247,8 +228,9 @@ void SettingsBitToolWidget::onAddressesClicked(){
     menuContacts->show();
 }
 
-void SettingsBitToolWidget::resizeMenu(){
-    if(menuContacts && menuContacts->isVisible()){
+void SettingsBitToolWidget::resizeMenu()
+{
+    if (menuContacts && menuContacts->isVisible()) {
         int width = ui->containerAddress->width();
         menuContacts->resizeList(width, menuContacts->height());
         menuContacts->resize(width, menuContacts->height());
@@ -259,14 +241,17 @@ void SettingsBitToolWidget::resizeMenu(){
     }
 }
 
-void SettingsBitToolWidget::onClearDecrypt(){
+void SettingsBitToolWidget::onClearDecrypt()
+{
     ui->lineEditKey->clear();
     ui->lineEditDecryptResult->clear();
     ui->lineEditPassphrase->clear();
+    ui->pushButtonImport->setVisible(false);
     key = CKey();
 }
 
-void SettingsBitToolWidget::onDecryptClicked(){
+void SettingsBitToolWidget::onDecryptClicked()
+{
     std::string strPassphrase = ui->lineEditPassphrase->text().toStdString();
     std::string strKey = ui->lineEditKey->text().toStdString();
 
@@ -282,10 +267,12 @@ void SettingsBitToolWidget::onDecryptClicked(){
     CPubKey pubKey = key.GetPubKey();
     CBitcoinAddress address(pubKey.GetID());
     ui->lineEditDecryptResult->setText(QString::fromStdString(address.ToString()));
+    ui->pushButtonImport->setVisible(true);
 }
 
-void SettingsBitToolWidget::importAddressFromDecKey(){
-    WalletModel::UnlockContext ctx(walletModel->requestUnlock(AskPassphraseDialog::Context::BIP_38, true));
+void SettingsBitToolWidget::importAddressFromDecKey()
+{
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
     if (!ctx.isValid()) {
         ui->statusLabel_DEC->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_DEC->setText(tr("Wallet unlock was cancelled."));
@@ -307,7 +294,7 @@ void SettingsBitToolWidget::importAddressFromDecKey(){
         ui->statusLabel_DEC->setText(tr("Please wait while key is imported"));
 
         pwalletMain->MarkDirty();
-        pwalletMain->SetAddressBook(vchAddress, "", "receive");
+        pwalletMain->SetAddressBook(vchAddress, "", AddressBook::AddressBookPurpose::RECEIVE);
 
         // Don't throw error in case a key is already there
         if (pwalletMain->HaveKey(vchAddress)) {
@@ -330,10 +317,11 @@ void SettingsBitToolWidget::importAddressFromDecKey(){
     }
 
     ui->statusLabel_DEC->setStyleSheet("QLabel { color: green; }");
-    ui->statusLabel_DEC->setText(tr("Successfully added azrate key to the wallet"));
+    ui->statusLabel_DEC->setText(tr("Successfully added private key to the wallet"));
 }
 
-void SettingsBitToolWidget::resizeEvent(QResizeEvent *event){
+void SettingsBitToolWidget::resizeEvent(QResizeEvent *event)
+{
     resizeMenu();
     QWidget::resizeEvent(event);
 }

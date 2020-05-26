@@ -28,11 +28,12 @@ public:
     enum ColumnIndex {
         Label = 0,  /**< User specified label */
         Address = 1, /**< Bitcoin address */
-        Date = 2 /**< Address creation date */
+        Date = 2, /**< Address creation date */
+        Type = 3 /**< Address Type */
     };
 
     enum RoleIndex {
-        TypeRole = Qt::UserRole /**< Type of address (#Send or #Receive) */
+        TypeRole = Qt::UserRole /**< Type of address (#Send, #Receive, #ColdStaking, #ColdStakingSend, #Delegators) */
     };
 
     /** Return status of edit/insert operation */
@@ -110,7 +111,7 @@ private:
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
 
-public slots:
+public Q_SLOTS:
     /* Update address list from core.
      */
     void updateEntry(const QString& address, const QString& label, bool isMine, const QString& purpose, int status);

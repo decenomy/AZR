@@ -46,6 +46,8 @@ static const int PING_INTERVAL = 2 * 60;
 static const int TIMEOUT_INTERVAL = 20 * 60;
 /** The maximum number of entries in an 'inv' protocol message */
 static const unsigned int MAX_INV_SZ = 50000;
+/** The maximum number of entries in a locator */
+static const unsigned int MAX_LOCATOR_SZ = 101;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
@@ -62,10 +64,14 @@ static const bool DEFAULT_UPNP = false;
 #endif
 /** The maximum number of entries in mapAskFor */
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
+/** The maximum number of peer connections to maintain. */
+static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** Disconnected peers are added to setOffsetDisconnectedPeers only if node has less than ENOUGH_CONNECTIONS */
 #define ENOUGH_CONNECTIONS 2
 /** Maximum number of peers added to setOffsetDisconnectedPeers before triggering a warning */
 #define MAX_TIMEOFFSET_DISCONNECTIONS 16
+
+static const ServiceFlags REQUIRED_SERVICES = NODE_NETWORK;
 
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
@@ -77,8 +83,8 @@ CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CSubNet& subNet);
 CNode* FindNode(const std::string& addrName);
 CNode* FindNode(const CService& ip);
-CNode* ConnectNode(CAddress addrConnect, const char* pszDest = NULL, bool obfuScationMaster = false);
-bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant* grantOutbound = NULL, const char* strDest = NULL, bool fOneShot = false);
+CNode* ConnectNode(CAddress addrConnect, const char* pszDest = NULL, bool fCountFailure = false);
+bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant* grantOutbound = NULL, const char* strDest = NULL, bool fOneShot = false);
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
 bool BindListenPort(const CService& bindAddr, std::string& strError, bool fWhitelisted = false);
@@ -126,27 +132,28 @@ bool GetLocal(CService& addr, const CNetAddr* paddrPeer = NULL);
 bool IsReachable(enum Network net);
 bool IsReachable(const CNetAddr& addr);
 CAddress GetLocalAddress(const CNetAddr* paddrPeer = NULL);
+bool validateMasternodeIP(const std::string& addrStr);          // valid, reachable and routable address
 
 
 extern bool fDiscover;
 extern bool fListen;
-extern uint64_t nLocalServices;
+extern ServiceFlags nLocalServices;
 extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;
 extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;
-extern CCriticalSection cs_vNodes;
+extern RecursiveMutex cs_vNodes;
 extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
-extern CCriticalSection cs_mapRelay;
+extern RecursiveMutex cs_mapRelay;
 extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
 
 extern std::vector<std::string> vAddedNodes;
-extern CCriticalSection cs_vAddedNodes;
+extern RecursiveMutex cs_vAddedNodes;
 
 extern NodeId nLastNodeId;
-extern CCriticalSection cs_nLastNodeId;
+extern RecursiveMutex cs_nLastNodeId;
 
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
@@ -156,14 +163,14 @@ struct LocalServiceInfo {
     int nPort;
 };
 
-extern CCriticalSection cs_mapLocalHost;
+extern RecursiveMutex cs_mapLocalHost;
 extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
 
 class CNodeStats
 {
 public:
     NodeId nodeid;
-    uint64_t nServices;
+    ServiceFlags nServices;
     int64_t nLastSend;
     int64_t nLastRecv;
     int64_t nTimeConnected;
@@ -290,18 +297,19 @@ class CNode
 {
 public:
     // socket
-    uint64_t nServices;
+    ServiceFlags nServices;
+    ServiceFlags nServicesExpected;
     SOCKET hSocket;
     CDataStream ssSend;
     size_t nSendSize;   // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
     uint64_t nSendBytes;
     std::deque<CSerializeData> vSendMsg;
-    CCriticalSection cs_vSend;
+    RecursiveMutex cs_vSend;
 
     std::deque<CInv> vRecvGetData;
     std::deque<CNetMessage> vRecvMsg;
-    CCriticalSection cs_vRecvMsg;
+    RecursiveMutex cs_vRecvMsg;
     uint64_t nRecvBytes;
     int nRecvVersion;
 
@@ -330,14 +338,8 @@ public:
     // b) the peer may tell us in their version message that we should not relay tx invs
     //    until they have initialized their bloom filter.
     bool fRelayTxes;
-    // Should be 'true' only if we connected to this node to actually mix funds.
-    // In this case node will be released automatically via CMasternodeMan::ProcessMasternodeConnections().
-    // Connecting to verify connectability/status or connecting for sending/relaying single message
-    // (even if it's relative to mixing e.g. for blinding) should NOT set this to 'true'.
-    // For such cases node should be released manually (preferably right after corresponding code).
-    bool fObfuScationMaster;
     CSemaphoreGrant grantOutbound;
-    CCriticalSection cs_filter;
+    RecursiveMutex cs_filter;
     CBloomFilter* pfilter;
     int nRefCount;
     NodeId id;
@@ -346,7 +348,7 @@ protected:
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
     static banmap_t setBanned;
-    static CCriticalSection cs_setBanned;
+    static RecursiveMutex cs_setBanned;
     static bool setBannedIsDirty;
 
     std::vector<std::string> vecRequestsFulfilled; //keep track of what client has asked for
@@ -354,7 +356,7 @@ protected:
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
     static std::vector<CSubNet> vWhitelistedRange;
-    static CCriticalSection cs_vWhitelistedRange;
+    static RecursiveMutex cs_vWhitelistedRange;
 
     // Basic fuzz-testing
     void Fuzz(int nChance); // modifies ssSend
@@ -372,7 +374,7 @@ public:
     // inventory based relay
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
-    CCriticalSection cs_inventory;
+    RecursiveMutex cs_inventory;
     std::multimap<int64_t, CInv> mapAskFor;
     std::vector<uint256> vBlockRequested;
 
@@ -391,8 +393,8 @@ public:
 
 private:
     // Network usage totals
-    static CCriticalSection cs_totalBytesRecv;
-    static CCriticalSection cs_totalBytesSent;
+    static RecursiveMutex cs_totalBytesRecv;
+    static RecursiveMutex cs_totalBytesSent;
     static uint64_t nTotalBytesRecv;
     static uint64_t nTotalBytesSent;
 
@@ -453,11 +455,11 @@ public:
         // Known checking here is only to save space from duplicates.
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
-        if (addr.IsValid() && !setAddrKnown.count(addr)) {
+        if (_addr.IsValid() && !setAddrKnown.count(_addr)) {
             if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
                 vAddrToSend[insecure_rand.randrange(vAddrToSend.size())] = _addr;
             } else {
-                vAddrToSend.push_back(addr);
+                vAddrToSend.push_back(_addr);
             }
         }
     }
@@ -759,6 +761,7 @@ public:
     CAddrDB();
     bool Write(const CAddrMan& addr);
     bool Read(CAddrMan& addr);
+    bool Read(CAddrMan& addr, CDataStream& ssPeers);
 };
 
 /** Access to the banlist database (banlist.dat) */

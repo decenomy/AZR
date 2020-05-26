@@ -57,10 +57,10 @@ public:
     void resizeEvent(QResizeEvent *event) override;
     void showHide(bool show);
     int getNavWidth();
-signals:
+Q_SIGNALS:
     void themeChanged(bool isLightTheme, QString& theme);
     void windowResizeEvent(QResizeEvent* event);
-public slots:
+public Q_SLOTS:
     void changeTheme(bool isLightTheme);
     void goToDashboard();
     void goToSend();
@@ -162,22 +162,26 @@ private:
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
 
-private slots:
+public Q_SLOTS:
+    /** called by a timer to check if fRequestShutdown has been set **/
+    void detectShutdown();
+
+private Q_SLOTS:
     /** Show window if hidden, unminimize when minimized, rise when obscured or show if hidden and fToggleHidden is true */
     void showNormalIfMinimized(bool fToggleHidden = false);
 
     /** Simply calls showNormalIfMinimized(true) for use in SLOT() macro */
     void toggleHidden();
 
-    /** called by a timer to check if fRequestShutdown has been set **/
-    void detectShutdown();
-
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
+#else
+    /** Handle macOS Dock icon clicked */
+     void macosDockIconActivated();
 #endif
 
-signals:
+Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString& uri);
     /** Restart handling */

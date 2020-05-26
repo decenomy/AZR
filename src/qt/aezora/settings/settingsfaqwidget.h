@@ -7,6 +7,8 @@
 
 #include <QDialog>
 
+class AEZORAGUI;
+
 namespace Ui {
 class SettingsFaqWidget;
 }
@@ -16,15 +18,15 @@ class SettingsFaqWidget : public QDialog
     Q_OBJECT
 
 public:
-    explicit SettingsFaqWidget(QWidget *parent = nullptr);
+    explicit SettingsFaqWidget(AEZORAGUI *parent = nullptr);
     ~SettingsFaqWidget();
 
     void showEvent(QShowEvent *event) override;
 
-public slots:
+public Q_SLOTS:
    void windowResizeEvent(QResizeEvent* event);
    void setSection(int num);
-private slots:
+private Q_SLOTS:
     void onFaq1Clicked();
     void onFaq2Clicked();
     void onFaq3Clicked();

@@ -5,7 +5,6 @@
 #include "zazrcontroldialog.h"
 #include "ui_zazrcontroldialog.h"
 
-#include "zazr/accumulators.h"
 #include "main.h"
 #include "walletmodel.h"
 #include "guiutil.h"
@@ -56,9 +55,9 @@ ZAzrControlDialog::ZAzrControlDialog(QWidget *parent) :
     ui->pushButtonAll->setProperty("cssClass", "btn-check");
 
     // click on checkbox
-    connect(ui->treeWidget, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(updateSelection(QTreeWidgetItem*, int)));
+    connect(ui->treeWidget, &QTreeWidget::itemChanged, this, &ZAzrControlDialog::updateSelection);
     // push select/deselect all button
-    connect(ui->pushButtonAll, SIGNAL(clicked()), this, SLOT(ButtonAllClicked()));
+    connect(ui->pushButtonAll, &QPushButton::clicked, this, &ZAzrControlDialog::ButtonAllClicked);
 }
 
 ZAzrControlDialog::~ZAzrControlDialog()
@@ -102,7 +101,6 @@ void ZAzrControlDialog::updateList()
 
     //populate rows with mint info
     int nBestHeight = chainActive.Height();
-    //map<CoinDenomination, int> mapMaturityHeight = GetMintMaturityHeight();
     for (const CMintMeta& mint : setMints) {
         // assign this mint to the correct denomination in the tree view
         libzerocoin::CoinDenomination denom = mint.denom;
@@ -131,19 +129,6 @@ void ZAzrControlDialog::updateList()
         itemMint->setText(COLUMN_CONFIRMATIONS, QString::number(nConfirmations));
         itemMint->setData(COLUMN_CONFIRMATIONS, Qt::UserRole, QVariant((qlonglong) nConfirmations));
 
-        {
-            LOCK(pwalletMain->zazrTracker->cs_spendcache);
-
-            CoinWitnessData *witnessData = pwalletMain->zazrTracker->GetSpendCache(mint.hashStake);
-            if (witnessData->nHeightAccStart > 0  && witnessData->nHeightAccEnd > 0) {
-                int nPercent = std::max(0, std::min(100, (int)((double)(witnessData->nHeightAccEnd - witnessData->nHeightAccStart) / (double)(nBestHeight - witnessData->nHeightAccStart - 220) * 100)));
-                QString percent = QString::number(nPercent) + QString("%");
-                itemMint->setText(COLUMN_PRECOMPUTE, percent);
-            } else {
-                itemMint->setText(COLUMN_PRECOMPUTE, QString("0%"));
-            }
-        }
-
         // check for maturity
         // Always mature, public spends doesn't require any new accumulation.
         bool isMature = true;
@@ -151,7 +136,8 @@ void ZAzrControlDialog::updateList()
         //    isMature = mint.nHeight < mapMaturityHeight.at(denom);
 
         // disable selecting this mint if it is not spendable - also display a reason why
-        bool fSpendable = isMature && nConfirmations >= Params().Zerocoin_MintRequiredConfirmations() && mint.isSeedCorrect;
+        const int nRequiredConfs = Params().GetConsensus().ZC_MinMintConfirmations;
+        bool fSpendable = isMature && nConfirmations >= nRequiredConfs && mint.isSeedCorrect;
         if(!fSpendable) {
             itemMint->setDisabled(true);
             itemMint->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
@@ -161,14 +147,14 @@ void ZAzrControlDialog::updateList()
                 setSelectedMints.erase(strPubCoinHash);
 
             std::string strReason = "";
-            if(nConfirmations < Params().Zerocoin_MintRequiredConfirmations())
-                strReason = strprintf("Needs %d more confirmations", Params().Zerocoin_MintRequiredConfirmations() - nConfirmations);
+            if(nConfirmations < nRequiredConfs)
+                strReason = strprintf("Needs %d more confirmations", nRequiredConfs - nConfirmations);
             else if (model->getEncryptionStatus() == WalletModel::EncryptionStatus::Locked)
-                strReason = "Your wallet is locked. Impossible to precompute or spend zAZR.";
+                strReason = "Your wallet is locked. Impossible to spend zAZR.";
             else if (!mint.isSeedCorrect)
                 strReason = "The zAZR seed used to mint this zAZR is not the same as currently hold in the wallet";
             else
-                strReason = strprintf("Needs %d more mints added to network", Params().Zerocoin_RequiredAccumulation());
+                strReason = "Needs 1 more mint added to network";
 
             itemMint->setText(COLUMN_ISSPENDABLE, QString::fromStdString(strReason));
         } else {

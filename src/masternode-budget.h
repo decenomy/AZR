@@ -16,7 +16,7 @@
 #include "util.h"
 
 
-extern CCriticalSection cs_budget;
+extern RecursiveMutex cs_budget;
 
 class CBudgetManager;
 class CFinalizedBudgetBroadcast;
@@ -183,7 +183,7 @@ private:
 
 public:
     // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     // keep track of the scanning errors I've seen
     std::map<uint256, CBudgetProposal> mapProposals;
@@ -289,7 +289,7 @@ public:
     {
         payee = CScript();
         nAmount = 0;
-        nProposalHash = 0;
+        nProposalHash = UINT256_ZERO;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -298,7 +298,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
-        READWRITE(payee);
+        READWRITE(*(CScriptBase*)(&payee));
         READWRITE(nAmount);
         READWRITE(nProposalHash);
     }
@@ -312,7 +312,7 @@ class CFinalizedBudget
 {
 private:
     // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     bool fAutoChecked; //If it matches what we see, we'll auto vote for it (masternode only)
 
 public:
@@ -327,7 +327,7 @@ public:
     CFinalizedBudget();
     CFinalizedBudget(const CFinalizedBudget& other);
 
-    void CleanAndRemove(bool fSignatureCheck);
+    void CleanAndRemove();
     bool AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& strError);
     double GetScore();
     bool HasMinimumRequiredSupport();
@@ -455,7 +455,7 @@ class CBudgetProposal
 {
 private:
     // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     CAmount nAlloted;
 
 public:
@@ -509,7 +509,7 @@ public:
     void SetAllotted(CAmount nAllotedIn) { nAlloted = nAllotedIn; }
     CAmount GetAllotted() { return nAlloted; }
 
-    void CleanAndRemove(bool fSignatureCheck);
+    void CleanAndRemove();
 
     uint256 GetHash() const
     {
@@ -519,7 +519,7 @@ public:
         ss << nBlockStart;
         ss << nBlockEnd;
         ss << nAmount;
-        ss << address;
+        ss << std::vector<unsigned char>(address.begin(), address.end());
         uint256 h1 = ss.GetHash();
 
         return h1;
@@ -537,7 +537,7 @@ public:
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nTime);
         READWRITE(nFeeTXHash);
 
@@ -594,7 +594,7 @@ public:
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nFeeTXHash);
     }
 };

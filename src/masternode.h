@@ -110,7 +110,7 @@ class CMasternode : public CSignedMessage
 {
 private:
     // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
     int64_t lastTimeChecked;
 
 public:
@@ -145,9 +145,6 @@ public:
     int nScanningErrorCount;
     int nLastScanningErrorBlockHeight;
     CMasternodePing lastPing;
-
-    int64_t nLastDsee;  // temporary, do not save. Remove after migration to v12
-    int64_t nLastDseep; // temporary, do not save. Remove after migration to v12
 
     CMasternode();
     CMasternode(const CMasternode& other);
@@ -228,13 +225,6 @@ public:
     int64_t SecondsSincePayment();
 
     bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb);
-
-    inline uint64_t SliceHash(uint256& hash, int slice)
-    {
-        uint64_t n = 0;
-        memcpy(&n, &hash + slice * 64, 64);
-        return n;
-    }
 
     void Check(bool forceCheck = false);
 

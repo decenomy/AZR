@@ -42,11 +42,11 @@ public:
     void loadClientModel() override;
     void loadWalletModel() override;
 
-signals:
+Q_SIGNALS:
     /** Signal raised when a URI was entered or dragged to the GUI */
     void receivedURI(const QString& uri);
 
-public slots:
+public Q_SLOTS:
     void onChangeAddressClicked();
     void onChangeCustomFeeClicked();
     void onCoinControlClicked();
@@ -57,19 +57,23 @@ public slots:
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
+    void showEvent(QShowEvent *event) override;
 
-private slots:
+private Q_SLOTS:
     void onAZRSelected(bool _isAZR);
     void onSendClicked();
     void onContactsClicked(SendMultiRow* entry);
     void onMenuClicked(SendMultiRow* entry);
     void onAddEntryClicked();
     void clearEntries();
-    void clearAll();
+    void clearAll(bool fClearSettings = true);
     void refreshView();
+    void onCheckBoxChanged();
     void onContactMultiClicked();
     void onDeleteClicked();
     void onResetCustomOptions(bool fRefreshAmounts);
+    void onResetSettings();
+
 private:
     Ui::send *ui;
     QPushButton *coinIcon;
@@ -77,6 +81,8 @@ private:
 
     SendCustomFeeDialog* customFeeDialog = nullptr;
     bool isCustomFeeSelected = false;
+    bool fDelegationsChecked = false;
+    CAmount cachedDelegatedBalance{0};
 
     int nDisplayUnit;
     QList<SendMultiRow*> entries;
@@ -93,7 +99,10 @@ private:
     SendMultiRow* createEntry();
     bool send(QList<SendCoinsRecipient> recipients);
     bool sendZazr(QList<SendCoinsRecipient> recipients);
+    void setFocusOnLastEntry();
+    void showHideCheckBoxDelegations();
     void updateEntryLabels(QList<SendCoinsRecipient> recipients);
+    void setCustomFeeSelected(bool isSelected, const CAmount& customFee = DEFAULT_TRANSACTION_FEE);
 
 };
 

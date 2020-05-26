@@ -55,27 +55,28 @@ QString BitcoinUnits::id(int unit)
 
 QString BitcoinUnits::name(int unit, bool isZazr)
 {
+    const QString CURR_UNIT = QString(CURRENCY_UNIT.c_str());
     QString z = "";
     if(isZazr) z = "z";
     if (Params().NetworkID() == CBaseChainParams::MAIN) {
         switch (unit) {
         case AZR:
-            return z + QString("AZR");
+            return z + CURR_UNIT;
         case mAZR:
-            return z + QString("mAZR");
+            return z + QString("m") + CURR_UNIT;
         case uAZR:
-            return z + QString::fromUtf8("μAZR");
+            return z + QString::fromUtf8("μ") + CURR_UNIT;
         default:
             return QString("???");
         }
     } else {
         switch (unit) {
         case AZR:
-            return z + QString("tAZR");
+            return z + QString("t") + CURR_UNIT;
         case mAZR:
-            return z + QString("mtAZR");
+            return z + QString("mt") + CURR_UNIT;
         case uAZR:
-            return z + QString::fromUtf8("μtAZR");
+            return z + QString::fromUtf8("μt") + CURR_UNIT;
         default:
             return QString("???");
         }
@@ -84,25 +85,26 @@ QString BitcoinUnits::name(int unit, bool isZazr)
 
 QString BitcoinUnits::description(int unit)
 {
+    const QString CURR_UNIT = QString(CURRENCY_UNIT.c_str());
     if (Params().NetworkID() == CBaseChainParams::MAIN) {
         switch (unit) {
         case AZR:
-            return QString("AZR");
+            return CURR_UNIT;
         case mAZR:
-            return QString("Milli-AZR (1 / 1" THIN_SP_UTF8 "000)");
+            return QString("Milli-") + CURR_UNIT + QString(" (1 / 1" THIN_SP_UTF8 "000)");
         case uAZR:
-            return QString("Micro-AZR (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            return QString("Micro-") + CURR_UNIT + QString(" (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
         default:
             return QString("???");
         }
     } else {
         switch (unit) {
         case AZR:
-            return QString("TestAZRs");
+            return QString("Test") + CURR_UNIT;
         case mAZR:
-            return QString("Milli-TestAZR (1 / 1" THIN_SP_UTF8 "000)");
+            return QString("Milli-Test") + CURR_UNIT + QString(" (1 / 1" THIN_SP_UTF8 "000)");
         case uAZR:
-            return QString("Micro-TestAZR (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            return QString("Micro-Test") + CURR_UNIT + QString(" (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
         default:
             return QString("???");
         }
@@ -308,5 +310,5 @@ QVariant BitcoinUnits::data(const QModelIndex& index, int role) const
 
 CAmount BitcoinUnits::maxMoney()
 {
-    return Params().MaxMoneyOut();
+    return Params().GetConsensus().nMaxMoneyOut;
 }

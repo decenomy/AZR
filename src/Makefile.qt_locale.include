@@ -1,0 +1,14 @@
+QT_TS = \
+  qt/locale/aezora_de.ts \
+  qt/locale/aezora_en.ts \
+  qt/locale/aezora_en_US.ts \
+  qt/locale/aezora_es.ts \
+  qt/locale/aezora_fr_FR.ts \
+  qt/locale/aezora_hr_HR.ts \
+  qt/locale/aezora_it.ts \
+  qt/locale/aezora_ko_KR.ts \
+  qt/locale/aezora_nl.ts \
+  qt/locale/aezora_pl.ts \
+  qt/locale/aezora_ru.ts \
+  qt/locale/aezora_tr.ts \
+  qt/locale/aezora_zh_CN.ts

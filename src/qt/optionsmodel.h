@@ -49,13 +49,16 @@ public:
         ZeromintAddresses,   // bool
         ZeromintPercentage,  // int
         ZeromintPrefDenom,   // int
+        HideCharts,          // bool
         HideZeroBalances,    // bool
         HideOrphans,    // bool
         AnonymizeAezoraAmount, //int
         ShowMasternodesTab,  // bool
         Listen,              // bool
-        StakeSplitThreshold, // int
-        ShowColdStakingScreen, // bool
+        StakeSplitThreshold,    // CAmount (LongLong)
+        ShowColdStakingScreen,  // bool
+        fUseCustomFee,          // bool
+        nCustomFee,             // CAmount (LongLong)
         OptionIDRowCount,
     };
 
@@ -69,9 +72,13 @@ public:
     /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
     void setDisplayUnit(const QVariant& value);
     /* Update StakeSplitThreshold's value in wallet */
-    void setStakeSplitThreshold(int value);
+    void setStakeSplitThreshold(const CAmount value);
+    /* Update Custom Fee value in wallet */
+    void setUseCustomFee(bool fUse);
+    void setCustomFeeValue(const CAmount& value);
 
     /* Explicit getters */
+    bool isHideCharts() { return fHideCharts; }
     bool getMinimizeToTray() { return fMinimizeToTray; }
     bool getMinimizeOnClose() { return fMinimizeOnClose; }
     int getDisplayUnit() { return nDisplayUnit; }
@@ -111,6 +118,7 @@ private:
     QString strThirdPartyTxUrls;
     bool fCoinControlFeatures;
     bool showColdStakingScreen;
+    bool fHideCharts;
     bool fHideZeroBalances;
     bool fHideOrphans;
     /* settings that were overriden by command-line */
@@ -119,7 +127,7 @@ private:
     /// Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string& option);
 
-signals:
+Q_SIGNALS:
     void displayUnitChanged(int unit);
     void zeromintEnableChanged(bool);
     void zeromintAddressesChanged(bool);
@@ -128,6 +136,7 @@ signals:
     void anonymizeAezoraAmountChanged(int);
     void coinControlFeaturesChanged(bool);
     void showHideColdStakingScreen(bool);
+    void hideChartsChanged(bool);
     void hideZeroBalancesChanged(bool);
     void hideOrphansChanged(bool);
 };

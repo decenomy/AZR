@@ -5,37 +5,45 @@
 #ifndef SENDCUSTOMFEEDIALOG_H
 #define SENDCUSTOMFEEDIALOG_H
 
-#include <QDialog>
 #include "amount.h"
+#include "qt/aezora/focuseddialog.h"
+#include "qt/aezora/snackbar.h"
 
+class AEZORAGUI;
 class WalletModel;
 
 namespace Ui {
 class SendCustomFeeDialog;
 }
 
-class SendCustomFeeDialog : public QDialog
+class SendCustomFeeDialog : public FocusedDialog
 {
     Q_OBJECT
 
 public:
-    explicit SendCustomFeeDialog(QWidget *parent = nullptr);
+    explicit SendCustomFeeDialog(AEZORAGUI* parent, WalletModel* model);
     ~SendCustomFeeDialog();
 
-    void setWalletModel(WalletModel* model);
-    void showEvent(QShowEvent *event) override;
+    void showEvent(QShowEvent* event) override;
     CFeeRate getFeeRate();
+    bool isCustomFeeChecked();
     void clear();
 
-public slots:
+public Q_SLOTS:
     void onRecommendedChecked();
     void onCustomChecked();
     void updateFee();
     void onChangeTheme(bool isLightTheme, QString& theme);
+
+protected Q_SLOTS:
+    void accept() override;
+
 private:
-    Ui::SendCustomFeeDialog *ui;
+    Ui::SendCustomFeeDialog* ui;
     WalletModel* walletModel = nullptr;
     CFeeRate feeRate;
+    SnackBar* snackBar = nullptr;
+    void inform(const QString& text);
 };
 
 #endif // SENDCUSTOMFEEDIALOG_H

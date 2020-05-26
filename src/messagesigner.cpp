@@ -66,7 +66,7 @@ bool CHashSigner::VerifyHash(const uint256& hash, const CKeyID& keyID, const std
 
     if(pubkeyFromSig.GetID() != keyID) {
         strErrorRet = strprintf("Keys don't match: pubkey=%s, pubkeyFromSig=%s, hash=%s, vchSig=%s",
-                CBitcoinAddress(keyID).ToString(), CBitcoinAddress(pubkeyFromSig.GetID()).ToString(),
+                EncodeDestination(keyID), EncodeDestination(pubkeyFromSig.GetID()),
                 hash.ToString(), EncodeBase64(&vchSig[0], vchSig.size()));
         return false;
     }
@@ -128,27 +128,22 @@ bool CSignedMessage::CheckSignature(const CPubKey& pubKey) const
 
     if (nMessVersion == MessageVersion::MESS_VER_HASH) {
         uint256 hash = GetSignatureHash();
-        if(!CHashSigner::VerifyHash(hash, pubKey, vchSig, strError))
-            return error("%s : VerifyHash failed: %s", __func__, strError);
-
-    } else {
-        std::string strMessage = GetStrMessage();
-        if(!CMessageSigner::VerifyMessage(pubKey, vchSig, strMessage, strError))
-            return error("%s : VerifyMessage failed: %s", __func__, strError);
+        return CHashSigner::VerifyHash(hash, pubKey, vchSig, strError);
     }
 
-    return true;
+    std::string strMessage = GetStrMessage();
+    return CMessageSigner::VerifyMessage(pubKey, vchSig, strMessage, strError);
 }
 
-bool CSignedMessage::CheckSignature(const bool fSignatureCheck) const
+bool CSignedMessage::CheckSignature() const
 {
     std::string strError = "";
 
     const CPubKey pubkey = GetPublicKey(strError);
     if (pubkey == CPubKey())
-        return error("%s : ERROR: %s", __func__, strError);
+        return error("%s : %s", __func__, strError);
 
-    return !fSignatureCheck || CheckSignature(pubkey);
+    return CheckSignature(pubkey);
 }
 
 const CPubKey CSignedMessage::GetPublicKey(std::string& strErrorRet) const

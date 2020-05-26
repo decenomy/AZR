@@ -8,7 +8,6 @@
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
-#include "libzerocoin/CoinSpend.h"
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"
@@ -31,12 +30,12 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(FLATDATA(*this));
+        READWRITE(hash);
+        READWRITE(n);
     }
 
     void SetNull() { hash.SetNull(); n = (uint32_t) -1; }
     bool IsNull() const { return (hash.IsNull() && n == (uint32_t) -1); }
-    bool IsMasternodeReward(const CTransaction* tx) const;
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
@@ -79,14 +78,13 @@ public:
 
     explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<unsigned int>::max());
     CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=std::numeric_limits<uint32_t>::max());
-    CTxIn(const libzerocoin::CoinSpend& spend, libzerocoin::CoinDenomination denom);
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(prevout);
-        READWRITE(scriptSig);
+        READWRITE(*(CScriptBase*)(&scriptSig));
         READWRITE(nSequence);
     }
 
@@ -135,7 +133,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(nValue);
-        READWRITE(scriptPubKey);
+        READWRITE(*(CScriptBase*)(&scriptPubKey));
     }
 
     void SetNull()
@@ -162,6 +160,7 @@ public:
     }
 
     uint256 GetHash() const;
+    bool GetKeyIDFromUTXO(CKeyID& keyIDRet) const;
 
     bool IsDust(CFeeRate minRelayTxFee) const
     {

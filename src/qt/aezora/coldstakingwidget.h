@@ -48,10 +48,10 @@ public:
     void run(int type) override;
     void onError(QString error, int type) override;
 
-public slots:
+public Q_SLOTS:
     void walletSynced(bool sync);
 
-private slots:
+private Q_SLOTS:
     void changeTheme(bool isLightTheme, QString &theme) override;
     void handleAddressClicked(const QModelIndex &index);
     void handleMyColdAddressClicked(const QModelIndex &rIndex);
@@ -73,6 +73,8 @@ private slots:
     void onLabelClicked();
     void onMyStakingAddressesClicked();
     void onDelegationsRefreshed();
+    void onSortChanged(int idx);
+    void onSortOrderChanged(int idx);
 
 private:
     Ui::ColdStakingWidget *ui = nullptr;
@@ -89,6 +91,7 @@ private:
     QSpacerItem *spacerDiv = nullptr;
 
     bool isInDelegation = true;
+    bool isStakingAddressListVisible = false;
 
     ContactsDropdown *menuContacts = nullptr;
     TooltipMenu* menu = nullptr;
@@ -105,6 +108,9 @@ private:
     QModelIndex index;
     QModelIndex addressIndex;
 
+    // Cached sort type and order
+    AddressTableModel::ColumnIndex sortType = AddressTableModel::Label;
+    Qt::SortOrder sortOrder = Qt::AscendingOrder;
 
     int nDisplayUnit;
 
@@ -114,6 +120,7 @@ private:
     bool refreshDelegations();
     void onLabelClicked(QString dialogTitle, const QModelIndex &index, const bool& isMyColdStakingAddresses);
     void updateStakingTotalLabel();
+    void sortAddresses();
 };
 
 #endif // COLDSTAKINGWIDGET_H

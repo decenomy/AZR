@@ -165,23 +165,6 @@ private:
 // Intended for non-dynamically allocated structures.
 //
 template <typename T>
-void LockObject(const T& t)
-{
-    LockedPageManager::Instance().LockRange((void*)(&t), sizeof(T));
-}
-
-template <typename T>
-void UnlockObject(const T& t)
-{
-    memory_cleanse((void*)(&t), sizeof(T));
-    LockedPageManager::Instance().UnlockRange((void*)(&t), sizeof(T));
-}
-
-//
-// Allocator that locks its contents from being paged
-// out of memory and clears its contents before deletion.
-//
-template <typename T>
 struct secure_allocator : public std::allocator<T> {
     // MSVC8 default copy constructor is broken
     typedef std::allocator<T> base;

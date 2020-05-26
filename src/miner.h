@@ -7,6 +7,8 @@
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
+#include "primitives/block.h"
+
 #include <stdint.h>
 
 class CBlock;
@@ -18,6 +20,8 @@ class CWallet;
 
 struct CBlockTemplate;
 
+/** Get reliable pointer to current chain tip */
+CBlockIndex* GetChainTip();
 /** Generate a new block, without valid proof-of-work */
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, bool fProofOfStake);
 /** Modify the extranonce in a block */
@@ -37,5 +41,11 @@ void UpdateTime(CBlockHeader* block, const CBlockIndex* pindexPrev);
 
 extern double dHashesPerSec;
 extern int64_t nHPSTimerStart;
+
+struct CBlockTemplate {
+    CBlock block;
+    std::vector<CAmount> vTxFees;
+    std::vector<int64_t> vTxSigOps;
+};
 
 #endif // BITCOIN_MINER_H

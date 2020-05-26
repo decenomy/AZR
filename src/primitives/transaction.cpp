@@ -46,22 +46,9 @@ CTxIn::CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn, uint32_t nS
     nSequence = nSequenceIn;
 }
 
-CTxIn::CTxIn(const libzerocoin::CoinSpend& spend, libzerocoin::CoinDenomination denom)
-{
-    //Serialize the coinspend object and append it to a CScript
-    CDataStream serializedCoinSpend(SER_NETWORK, PROTOCOL_VERSION);
-    serializedCoinSpend << spend;
-    std::vector<unsigned char> data(serializedCoinSpend.begin(), serializedCoinSpend.end());
-
-    scriptSig = CScript() << OP_ZEROCOINSPEND << data.size();
-    scriptSig.insert(scriptSig.end(), data.begin(), data.end());
-    prevout.SetNull();
-    nSequence = denom;
-}
-
 bool CTxIn::IsZerocoinSpend() const
 {
-    return prevout.hash == 0 && scriptSig.IsZerocoinSpend();
+    return prevout.hash.IsNull() && scriptSig.IsZerocoinSpend();
 }
 
 bool CTxIn::IsZerocoinPublicSpend() const
@@ -94,17 +81,26 @@ CTxOut::CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn)
     nRounds = -10;
 }
 
-bool COutPoint::IsMasternodeReward(const CTransaction* tx) const
-{
-    if(!tx->IsCoinStake())
-        return false;
-
-    return (n == tx->vout.size() - 1) && (tx->vout[1].scriptPubKey != tx->vout[n].scriptPubKey);
-}
-
 uint256 CTxOut::GetHash() const
 {
     return SerializeHash(*this);
+}
+
+bool CTxOut::GetKeyIDFromUTXO(CKeyID& keyIDRet) const
+{
+    std::vector<valtype> vSolutions;
+    txnouttype whichType;
+    if (scriptPubKey.empty() || !Solver(scriptPubKey, whichType, vSolutions))
+        return false;
+    if (whichType == TX_PUBKEY) {
+        keyIDRet = CPubKey(vSolutions[0]).GetID();
+        return true;
+    }
+    if (whichType == TX_PUBKEYHASH || whichType == TX_COLDSTAKE) {
+        keyIDRet = CKeyID(uint160(vSolutions[0]));
+        return true;
+    }
+    return false;
 }
 
 bool CTxOut::IsZerocoinMint() const
@@ -153,7 +149,7 @@ void CTransaction::UpdateHash() const
     *const_cast<uint256*>(&hash) = SerializeHash(*this);
 }
 
-CTransaction::CTransaction() : hash(), nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
+CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0) { }
 
 CTransaction::CTransaction(const CMutableTransaction &tx) : nVersion(tx.nVersion), vin(tx.vin), vout(tx.vout), nLockTime(tx.nLockTime) {
     UpdateHash();
@@ -201,7 +197,6 @@ bool CTransaction::IsCoinStake() const
     if (vin.empty())
         return false;
 
-    // ppcoin: the coin stake transaction is marked with the first output empty
     bool fAllowNull = vin[0].IsZerocoinSpend();
     if (vin[0].prevout.IsNull() && !fAllowNull)
         return false;

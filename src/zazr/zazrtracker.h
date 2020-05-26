@@ -6,24 +6,24 @@
 #define AEZORA_ZAZRTRACKER_H
 
 #include "zerocoin.h"
-#include "witness.h"
 #include "sync.h"
 #include <list>
 
 class CDeterministicMint;
 class CzAZRWallet;
+class CWallet;
 
 class CzAZRTracker
 {
 private:
     bool fInitialized;
-    std::string strWalletFile;
+    /* Parent wallet */
+    CWallet* wallet{nullptr};
     std::map<uint256, CMintMeta> mapSerialHashes;
     std::map<uint256, uint256> mapPendingSpends; //serialhash, txid of spend
-    std::map<uint256, std::unique_ptr<CoinWitnessData> > mapStakeCache; //serialhash, witness value, height
     bool UpdateStatusInternal(const std::set<uint256>& setMempool, CMintMeta& mint);
 public:
-    CzAZRTracker(std::string strWalletFile);
+    CzAZRTracker(CWallet* parent);
     ~CzAZRTracker();
     void Add(const CDeterministicMint& dMint, bool isNew = false, bool isArchived = false, CzAZRWallet* zAZRWallet = NULL);
     void Add(const CZerocoinMint& mint, bool isNew = false, bool isArchived = false);
@@ -40,9 +40,6 @@ public:
     bool GetMetaFromStakeHash(const uint256& hashStake, CMintMeta& meta) const;
     CAmount GetBalance(bool fConfirmedOnly, bool fUnconfirmedOnly) const;
     std::vector<uint256> GetSerialHashes();
-    mutable CCriticalSection cs_spendcache;
-    CoinWitnessData* GetSpendCache(const uint256& hashStake) EXCLUSIVE_LOCKS_REQUIRED(cs_spendcache);
-    bool ClearSpendCache() EXCLUSIVE_LOCKS_REQUIRED(cs_spendcache);
     std::vector<CMintMeta> GetMints(bool fConfirmedOnly) const;
     CAmount GetUnconfirmedBalance() const;
     std::set<CMintMeta> ListMints(bool fUnusedOnly, bool fMatureOnly, bool fUpdateStatus, bool fWrongSeed = false, bool fExcludeV1 = false);

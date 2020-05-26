@@ -6,13 +6,11 @@
 #include "qt/aezora/forms/ui_privacywidget.h"
 #include "qt/aezora/qtutils.h"
 #include "guiutil.h"
-#include "qt/aezora/denomgenerationdialog.h"
 #include "qt/aezora/txviewholder.h"
 #include "walletmodel.h"
 #include "optionsmodel.h"
 #include "coincontroldialog.h"
 #include "coincontrol.h"
-#include "zazr/accumulators.h"
 
 #define DECORATION_SIZE 65
 #define NUM_ITEMS 3
@@ -35,79 +33,38 @@ PrivacyWidget::PrivacyWidget(AEZORAGUI* parent) :
     fontLight.setWeight(QFont::Light);
 
     /* Title */
-    ui->labelTitle->setText(tr("Privacy"));
     setCssTitleScreen(ui->labelTitle);
     ui->labelTitle->setFont(fontLight);
 
     /* Button Group */
-    ui->pushLeft->setText(tr("Convert"));
     setCssProperty(ui->pushLeft, "btn-check-left");
-    ui->pushRight->setText(tr("Mint"));
     setCssProperty(ui->pushRight, "btn-check-right");
 
     /* Subtitle */
-    ui->labelSubtitle1->setText(tr("Minting zAZR anonymizes your AZR by removing any\ntransaction history, making transactions untraceable "));
     setCssSubtitleScreen(ui->labelSubtitle1);
-
-    ui->labelSubtitle2->setText(tr("Mint new zAZR or convert back to AZR"));
     setCssSubtitleScreen(ui->labelSubtitle2);
     ui->labelSubtitle2->setContentsMargins(0,2,0,0);
     setCssProperty(ui->labelSubtitleAmount, "text-title");
 
-    ui->lineEditAmount->setPlaceholderText("0.00 AZR ");
     ui->lineEditAmount->setValidator(new QRegExpValidator(QRegExp("[0-9]+")));
     initCssEditLine(ui->lineEditAmount);
 
     /* Denom */
-    ui->labelTitleDenom1->setText("Denom. with value 1:");
-    setCssProperty(ui->labelTitleDenom1, "text-subtitle");
-    ui->labelValueDenom1->setText("0x1 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom1, "text-body2");
-
-    ui->labelTitleDenom5->setText("Denom. with value 5:");
-    setCssProperty(ui->labelTitleDenom5, "text-subtitle");
-    ui->labelValueDenom5->setText("0x5 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom5, "text-body2");
-
-    ui->labelTitleDenom10->setText("Denom. with value 10:");
-    setCssProperty(ui->labelTitleDenom10, "text-subtitle");
-    ui->labelValueDenom10->setText("0x10 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom10, "text-body2");
-
-    ui->labelTitleDenom50->setText("Denom. with value 50:");
-    setCssProperty(ui->labelTitleDenom50, "text-subtitle");
-    ui->labelValueDenom50->setText("0x50 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom50, "text-body2");
-
-    ui->labelTitleDenom100->setText("Denom. with value 100:");
-    setCssProperty(ui->labelTitleDenom100, "text-subtitle");
-    ui->labelValueDenom100->setText("0x100 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom100, "text-body2");
-
-    ui->labelTitleDenom500->setText("Denom. with value 500:");
-    setCssProperty(ui->labelTitleDenom500, "text-subtitle");
-    ui->labelValueDenom500->setText("0x500 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom500, "text-body2");
-
-    ui->labelTitleDenom1000->setText("Denom. with value 1000:");
-    setCssProperty(ui->labelTitleDenom1000, "text-subtitle");
-    ui->labelValueDenom1000->setText("0x1000 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom1000, "text-body2");
-
-    ui->labelTitleDenom5000->setText("Denom. with value 5000:");
-    setCssProperty(ui->labelTitleDenom5000, "text-subtitle");
-    ui->labelValueDenom5000->setText("0x5000 = 0 zAZR");
-    setCssProperty(ui->labelValueDenom5000, "text-body2");
-
+    setCssProperty({ui->labelTitleDenom1, ui->labelTitleDenom5,
+                    ui->labelTitleDenom10, ui->labelTitleDenom50,
+                    ui->labelTitleDenom100, ui->labelTitleDenom500,
+                    ui->labelTitleDenom1000, ui->labelTitleDenom5000},"text-subtitle");
+    setCssProperty({ui->labelValueDenom1, ui->labelValueDenom5,
+                    ui->labelValueDenom10, ui->labelValueDenom50,
+                    ui->labelValueDenom100, ui->labelValueDenom500,
+                    ui->labelValueDenom1000, ui->labelValueDenom5000},"text-body2");
     ui->layoutDenom->setVisible(false);
 
     // List
-    ui->labelListHistory->setText(tr("Last Zerocoin Movements"));
     setCssProperty(ui->labelListHistory, "text-title");
 
     //ui->emptyContainer->setVisible(false);
     setCssProperty(ui->pushImgEmpty, "img-empty-privacy");
-    ui->labelEmpty->setText(tr("No transactions yet"));
     setCssProperty(ui->labelEmpty, "text-empty");
 
     // Buttons
@@ -117,28 +74,23 @@ PrivacyWidget::PrivacyWidget(AEZORAGUI* parent) :
     ui->containerViewPrivacyChecks->setVisible(false);
     onMintSelected(false);
 
-    ui->btnTotalzAZR->setTitleClassAndText("btn-title-grey", "Total 0 zAZR");
-    ui->btnTotalzAZR->setSubTitleClassAndText("text-subtitle", "Show denominations of zAZR owned.");
+    ui->btnTotalzAZR->setTitleClassAndText("btn-title-grey", tr("Total 0 zAZR"));
+    ui->btnTotalzAZR->setSubTitleClassAndText("text-subtitle", tr("Show denominations of zAZR owned."));
     ui->btnTotalzAZR->setRightIconClass("ic-arrow");
 
-    ui->btnCoinControl->setTitleClassAndText("btn-title-grey", "Coin Control");
-    ui->btnCoinControl->setSubTitleClassAndText("text-subtitle", "Select AZR outputs to mint into zAZR.");
+    ui->btnCoinControl->setTitleClassAndText("btn-title-grey", tr("Coin Control"));
+    ui->btnCoinControl->setSubTitleClassAndText("text-subtitle", tr("Select AZR outputs to mint into zAZR."));
 
-    ui->btnDenomGeneration->setTitleClassAndText("btn-title-grey", "Denom Generation");
-    ui->btnDenomGeneration->setSubTitleClassAndText("text-subtitle", "Select the denomination of the coins.");
-    ui->btnDenomGeneration->setVisible(false);
+    ui->btnRescanMints->setTitleClassAndText("btn-title-grey", tr("Rescan Mints"));
+    ui->btnRescanMints->setSubTitleClassAndText("text-subtitle", tr("Find mints in the blockchain."));
 
-    ui->btnRescanMints->setTitleClassAndText("btn-title-grey", "Rescan Mints");
-    ui->btnRescanMints->setSubTitleClassAndText("text-subtitle", "Find mints in the blockchain.");
+    ui->btnResetZerocoin->setTitleClassAndText("btn-title-grey", tr("Reset Spent zAZR"));
+    ui->btnResetZerocoin->setSubTitleClassAndText("text-subtitle", tr("Reset zerocoin database."));
 
-    ui->btnResetZerocoin->setTitleClassAndText("btn-title-grey", "Reset Zerocoin");
-    ui->btnResetZerocoin->setSubTitleClassAndText("text-subtitle", "Reset zerocoin database.");
-
-    connect(ui->btnTotalzAZR, SIGNAL(clicked()), this, SLOT(onTotalZazrClicked()));
-    connect(ui->btnCoinControl, SIGNAL(clicked()), this, SLOT(onCoinControlClicked()));
-    connect(ui->btnDenomGeneration, SIGNAL(clicked()), this, SLOT(onDenomClicked()));
-    connect(ui->btnRescanMints, SIGNAL(clicked()), this, SLOT(onRescanMintsClicked()));
-    connect(ui->btnResetZerocoin, SIGNAL(clicked()), this, SLOT(onResetZeroClicked()));
+    connect(ui->btnTotalzAZR, &OptionButton::clicked, this, &PrivacyWidget::onTotalZazrClicked);
+    connect(ui->btnCoinControl, &OptionButton::clicked, this, &PrivacyWidget::onCoinControlClicked);
+    connect(ui->btnRescanMints, &OptionButton::clicked, this, &PrivacyWidget::onRescanMintsClicked);
+    connect(ui->btnResetZerocoin, &OptionButton::clicked, this, &PrivacyWidget::onResetZeroClicked);
 
     ui->pushRight->setChecked(true);
     connect(ui->pushLeft, &QPushButton::clicked, [this](){onMintSelected(false);});
@@ -158,10 +110,14 @@ PrivacyWidget::PrivacyWidget(AEZORAGUI* parent) :
     ui->listView->setMinimumHeight(NUM_ITEMS * (DECORATION_SIZE + 2));
     ui->listView->setAttribute(Qt::WA_MacShowFocusRect, false);
     ui->listView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->listView->setLayoutMode(QListView::LayoutMode::Batched);
+    ui->listView->setBatchSize(30);
+    ui->listView->setUniformItemSizes(true);
 }
 
-void PrivacyWidget::loadWalletModel(){
-    if(walletModel) {
+void PrivacyWidget::loadWalletModel()
+{
+    if (walletModel) {
         txModel = walletModel->getTransactionTableModel();
         // Set up transaction list
         filter = new TransactionFilterProxy();
@@ -182,22 +138,23 @@ void PrivacyWidget::loadWalletModel(){
         if (!txModel->hasZcTxes()) {
             ui->emptyContainer->setVisible(true);
             ui->listView->setVisible(false);
-        }else{
+        } else {
             showList();
         }
 
-        connect(ui->pushButtonSave, SIGNAL(clicked()), this, SLOT(onSendClicked()));
+        connect(ui->pushButtonSave, &QPushButton::clicked, this, &PrivacyWidget::onSendClicked);
     }
 
 }
 
-void PrivacyWidget::onMintSelected(bool isMint){
+void PrivacyWidget::onMintSelected(bool isMint)
+{
     QString btnText;
-    if(isMint){
+    if (isMint) {
         btnText = tr("Mint zAZR");
         ui->btnCoinControl->setVisible(true);
         ui->labelSubtitleAmount->setText(tr("Enter amount of AZR to mint into zAZR"));
-    }else{
+    } else {
         btnText = tr("Convert back to AZR");
         ui->btnCoinControl->setVisible(false);
         ui->labelSubtitleAmount->setText(tr("Enter amount of zAZR to convert back into AZR"));
@@ -205,7 +162,8 @@ void PrivacyWidget::onMintSelected(bool isMint){
     ui->pushButtonSave->setText(btnText);
 }
 
-void PrivacyWidget::updateDisplayUnit() {
+void PrivacyWidget::updateDisplayUnit()
+{
     if (walletModel && walletModel->getOptionsModel()) {
         nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
 
@@ -214,27 +172,30 @@ void PrivacyWidget::updateDisplayUnit() {
     }
 }
 
-void PrivacyWidget::showList(){
+void PrivacyWidget::showList()
+{
     ui->emptyContainer->setVisible(false);
     ui->listView->setVisible(true);
 }
 
-void PrivacyWidget::onTotalZazrClicked(){
+void PrivacyWidget::onTotalZazrClicked()
+{
     bool isVisible = ui->layoutDenom->isVisible();
-    if(!isVisible){
+    if (!isVisible) {
         ui->layoutDenom->setVisible(true);
         ui->btnTotalzAZR->setRightIconClass("btn-dropdown", true);
-    }else{
+    } else {
         ui->layoutDenom->setVisible(false);
         ui->btnTotalzAZR->setRightIconClass("ic-arrow", true);
     }
 }
 
-void PrivacyWidget::onSendClicked(){
+void PrivacyWidget::onSendClicked()
+{
     if (!walletModel || !walletModel->getOptionsModel())
         return;
 
-    if(sporkManager.IsSporkActive(SPORK_16_ZEROCOIN_MAINTENANCE_MODE)) {
+    if (sporkManager.IsSporkActive(SPORK_16_ZEROCOIN_MAINTENANCE_MODE)) {
         warn(tr("Zerocoin"), tr("zAZR is currently undergoing maintenance"));
         return;
     }
@@ -242,7 +203,8 @@ void PrivacyWidget::onSendClicked(){
     // Only convert enabled.
     bool isConvert = true;// ui->pushLeft->isChecked();
 
-    if(!GUIUtil::requestUnlock(walletModel, AskPassphraseDialog::Context::Mint_zAZR, true)){
+    WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+    if (!ctx.isValid()) {
         inform(tr("You need to unlock the wallet to be able to %1 zAZR").arg(isConvert ? tr("convert") : tr("mint")));
         return;
     }
@@ -261,18 +223,19 @@ void PrivacyWidget::onSendClicked(){
     }
 
     setCssEditLine(ui->lineEditAmount, true, true);
-    if(isConvert){
+    if (isConvert) {
         spend(value);
-    }else{
+    } else {
         mint(value);
     }
 }
 
-void PrivacyWidget::mint(CAmount value){
+void PrivacyWidget::mint(CAmount value)
+{
     std::string strError;
-    if(!walletModel->mintCoins(value, CoinControlDialog::coinControl, strError)){
+    if (!walletModel->mintCoins(value, CoinControlDialog::coinControl, strError)) {
         inform(tr(strError.data()));
-    }else{
+    } else {
         // Mint succeed
         inform(tr("zAZR minted successfully"));
         // clear
@@ -280,21 +243,18 @@ void PrivacyWidget::mint(CAmount value){
     }
 }
 
-void PrivacyWidget::spend(CAmount value){
+void PrivacyWidget::spend(CAmount value)
+{
     CZerocoinSpendReceipt receipt;
     std::vector<CZerocoinMint> selectedMints;
-    bool mintChange = false;
-    bool minimizeChange = false;
 
-    if(!walletModel->convertBackZazr(
+    if (!walletModel->convertBackZazr(
             value,
             selectedMints,
-            mintChange,
-            minimizeChange,
             receipt
-    )){
+    )) {
         inform(receipt.GetStatusMessage().data());
-    }else{
+    } else {
         // Spend succeed
         inform(tr("zAZR converted back to AZR"));
         // clear
@@ -303,8 +263,9 @@ void PrivacyWidget::spend(CAmount value){
 }
 
 
-void PrivacyWidget::onCoinControlClicked(){
-    if(ui->pushRight->isChecked()) {
+void PrivacyWidget::onCoinControlClicked()
+{
+    if (ui->pushRight->isChecked()) {
         if (walletModel->getBalance() > 0) {
             if (!coinControlDialog) {
                 coinControlDialog = new CoinControlDialog();
@@ -320,35 +281,32 @@ void PrivacyWidget::onCoinControlClicked(){
     }
 }
 
-void PrivacyWidget::onDenomClicked(){
-    showHideOp(true);
-    DenomGenerationDialog* dialog = new DenomGenerationDialog(window);
-    openDialogWithOpaqueBackgroundY(dialog, window, 4.5, 5);
-}
-
-void PrivacyWidget::onRescanMintsClicked(){
+void PrivacyWidget::onRescanMintsClicked()
+{
     if (ask(tr("Rescan Mints"),
         tr("Your zerocoin mints are going to be scanned from the blockchain from scratch"))
-    ){
+    ) {
         std::string strResetMintResult = walletModel->resetMintZerocoin();
         inform(QString::fromStdString(strResetMintResult));
     }
 }
 
-void PrivacyWidget::onResetZeroClicked(){
-    if (ask(tr("Reset Spent Zerocoins"),
+void PrivacyWidget::onResetZeroClicked()
+{
+    if (ask(tr("Reset Spent zAZR"),
         tr("Your zerocoin spends are going to be scanned from the blockchain from scratch"))
-    ){
+    ) {
         std::string strResetMintResult = walletModel->resetSpentZerocoin();
         inform(QString::fromStdString(strResetMintResult));
     }
 }
 
-void PrivacyWidget::updateDenomsSupply(){
+void PrivacyWidget::updateDenomsSupply()
+{
     std::map<libzerocoin::CoinDenomination, CAmount> mapDenomBalances;
     std::map<libzerocoin::CoinDenomination, int> mapUnconfirmed;
     std::map<libzerocoin::CoinDenomination, int> mapImmature;
-    for (const auto& denom : libzerocoin::zerocoinDenomList){
+    for (const auto& denom : libzerocoin::zerocoinDenomList) {
         mapDenomBalances.insert(std::make_pair(denom, 0));
         mapUnconfirmed.insert(std::make_pair(denom, 0));
         mapImmature.insert(std::make_pair(denom, 0));
@@ -356,19 +314,17 @@ void PrivacyWidget::updateDenomsSupply(){
 
     std::set<CMintMeta> vMints;
     walletModel->listZerocoinMints(vMints, true, false, true, true);
+    const int nRequiredConfs = Params().GetConsensus().ZC_MinMintConfirmations;
 
-    std::map<libzerocoin::CoinDenomination, int> mapMaturityHeights = GetMintMaturityHeight();
-    for (auto& meta : vMints){
+    for (auto& meta : vMints) {
         // All denominations
         mapDenomBalances.at(meta.denom)++;
 
-        if (!meta.nHeight || chainActive.Height() - meta.nHeight <= Params().Zerocoin_MintRequiredConfirmations()) {
+        if (!meta.nHeight || chainActive.Height() - meta.nHeight <= nRequiredConfs) {
             // All unconfirmed denominations
             mapUnconfirmed.at(meta.denom)++;
         } else {
             if (meta.denom == libzerocoin::CoinDenomination::ZQ_ERROR) {
-                mapImmature.at(meta.denom)++;
-            } else if (meta.nHeight >= mapMaturityHeights.at(meta.denom)) {
                 mapImmature.at(meta.denom)++;
             }
         }
@@ -390,10 +346,10 @@ void PrivacyWidget::updateDenomsSupply(){
         if (nUnconfirmed) {
             strUnconfirmed += QString::number(nUnconfirmed) + QString(" unconf. ");
         }
-        if(nImmature) {
+        if (nImmature) {
             strUnconfirmed += QString::number(nImmature) + QString(" immature ");
         }
-        if(nImmature || nUnconfirmed) {
+        if (nImmature || nUnconfirmed) {
             strUnconfirmed = QString("( ") + strUnconfirmed + QString(") ");
         }
 
@@ -436,11 +392,13 @@ void PrivacyWidget::updateDenomsSupply(){
     ui->btnTotalzAZR->setTitleText(tr("Total %1").arg(GUIUtil::formatBalance(matureZerocoinBalance, nDisplayUnit, true)));
 }
 
-void PrivacyWidget::changeTheme(bool isLightTheme, QString& theme){
+void PrivacyWidget::changeTheme(bool isLightTheme, QString& theme)
+{
     static_cast<TxViewHolder*>(this->delegate->getRowFactory())->isLightTheme = isLightTheme;
     ui->listView->update();
 }
 
-PrivacyWidget::~PrivacyWidget(){
+PrivacyWidget::~PrivacyWidget()
+{
     delete ui;
 }

@@ -18,7 +18,6 @@ namespace boost
 class thread_group;
 } // namespace boost
 
-extern CWallet* pwalletMain;
 extern CzAZRWallet* zwalletMain;
 
 void StartShutdown();
@@ -27,6 +26,10 @@ bool ShutdownRequested();
 void Interrupt();
 void Shutdown();
 void PrepareShutdown();
+//!Initialize the logging infrastructure
+void InitLogging();
+//!Parameter interaction: change current parameters depending on various rules
+void InitParameterInteraction();
 bool AppInit2();
 
 /** Initialize AEZORA core: Basic context setup.

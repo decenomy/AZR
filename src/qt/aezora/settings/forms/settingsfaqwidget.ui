@@ -58,7 +58,7 @@
         <item>
          <widget class="QLabel" name="labelTitle">
           <property name="text">
-           <string>TextLabel</string>
+           <string>Frequently Asked Questions</string>
           </property>
          </widget>
         </item>
@@ -78,7 +78,7 @@
         <item>
          <widget class="QPushButton" name="pushButtonExit">
           <property name="text">
-           <string>PushButton</string>
+           <string>Exit</string>
           </property>
          </widget>
         </item>
@@ -361,7 +361,7 @@
                       <enum>Qt::NoFocus</enum>
                      </property>
                      <property name="text">
-                      <string>9) What is a Master Node?</string>
+                      <string>9) What is a Masternode?</string>
                      </property>
                      <property name="checkable">
                       <bool>true</bool>
@@ -383,7 +383,7 @@
                       <enum>Qt::NoFocus</enum>
                      </property>
                      <property name="text">
-                      <string>10) What is a Master Node Controller?</string>
+                      <string>10) What is a Masternode Controller?</string>
                      </property>
                      <property name="checkable">
                       <bool>true</bool>
@@ -1234,7 +1234,7 @@
                            &lt;ol&gt;&lt;li&gt;
                            Make sure your wallet is completely synchronized and you are using the latest release.
                            &lt;li&gt;
-                           You must have a balance of AEZORA with a minimum of 101 confirmations.
+                           You must have a balance of AEZORA with a minimum of 160 confirmations.
                            &lt;li&gt;
                            Your wallet must stay online and be unlocked for anonymization and staking purposes.
                            &lt;li&gt;
@@ -1318,7 +1318,7 @@
                       <item>
                        <widget class="QLabel" name="labelSubtitle8">
                         <property name="text">
-                         <string>Where I should go if I need support?</string>
+                         <string>Where should I go if I need support?</string>
                         </property>
                         <property name="wordWrap">
                          <bool>true</bool>
@@ -1416,7 +1416,7 @@
                       <item>
                        <widget class="QLabel" name="labelSubtitle9">
                         <property name="text">
-                         <string>What is a Master Node?</string>
+                         <string>What is a Masternode?</string>
                         </property>
                         <property name="wordWrap">
                          <bool>true</bool>
@@ -1547,7 +1547,7 @@
                       <item>
                        <widget class="QLabel" name="labelSubtitle10">
                         <property name="text">
-                         <string>What is a Master Node Controller?</string>
+                         <string>What is a Masternode Controller?</string>
                         </property>
                         <property name="wordWrap">
                          <bool>true</bool>

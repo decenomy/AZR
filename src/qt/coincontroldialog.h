@@ -7,6 +7,7 @@
 #define BITCOIN_QT_COINCONTROLDIALOG_H
 
 #include "amount.h"
+#include "qt/aezora/snackbar.h"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -61,10 +62,12 @@ public:
 
 private:
     Ui::CoinControlDialog* ui;
+    SnackBar *snackBar = nullptr;
     WalletModel* model;
     int sortColumn;
     Qt::SortOrder sortOrder;
     bool fMultisigEnabled;
+    bool fSelectAllToggled{true};     // false when pushButtonSelectAll text is "Unselect All"
 
     QMenu* contextMenu;
     QTreeWidgetItem* contextMenuItem;
@@ -73,6 +76,7 @@ private:
     QAction* unlockAction;
 
     void sortView(int, Qt::SortOrder);
+    void inform(const QString& text);
 
     enum {
         COLUMN_CHECKBOX,
@@ -86,7 +90,7 @@ private:
     };
     friend class CCoinControlWidgetItem;
 
-private slots:
+private Q_SLOTS:
     void showMenu(const QPoint&);
     void copyAmount();
     void copyLabel();

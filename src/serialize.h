@@ -18,11 +18,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "compat/endian.h"
 #include "libzerocoin/Denominations.h"
 #include "libzerocoin/SpendType.h"
+#include "prevector.h"
 #include "sporkid.h"
 
-class CScript;
 
 static const unsigned int MAX_SIZE = 0x02000000;
 
@@ -45,6 +47,107 @@ inline T* NCONST_PTR(const T* val)
 {
     return const_cast<T*>(val);
 }
+
+/**
+ * Important: Do not use the following functions in new code, but use v.data()
+ * and v.data() + v.size() respectively directly. They were once introduced to
+ * have a compatible, safe way to get the begin and end pointer of a vector.
+ * However with C++11 the language has built-in functionality for this and it's
+ * more readable to just use that.
+ */
+template <typename V>
+inline typename V::value_type* begin_ptr(V& v)
+{
+    return v.data();
+}
+template <typename V>
+inline const typename V::value_type* begin_ptr(const V& v)
+{
+    return v.data();
+}
+template <typename V>
+inline typename V::value_type* end_ptr(V& v)
+{
+    return v.data() + v.size();
+}
+template <typename V>
+inline const typename V::value_type* end_ptr(const V& v)
+{
+    return v.data() + v.size();
+}
+
+/*
+ * Lowest-level serialization and conversion.
+ * @note Sizes of these types are verified in the tests
+ */
+template<typename Stream> inline void ser_writedata8(Stream &s, uint8_t obj)
+{
+    s.write((char*)&obj, 1);
+}
+template<typename Stream> inline void ser_writedata16(Stream &s, uint16_t obj)
+{
+    obj = htole16(obj);
+    s.write((char*)&obj, 2);
+}
+template<typename Stream> inline void ser_writedata32(Stream &s, uint32_t obj)
+{
+    obj = htole32(obj);
+    s.write((char*)&obj, 4);
+}
+template<typename Stream> inline void ser_writedata64(Stream &s, uint64_t obj)
+{
+    obj = htole64(obj);
+    s.write((char*)&obj, 8);
+}
+template<typename Stream> inline uint8_t ser_readdata8(Stream &s)
+{
+    uint8_t obj;
+    s.read((char*)&obj, 1);
+    return obj;
+}
+template<typename Stream> inline uint16_t ser_readdata16(Stream &s)
+{
+    uint16_t obj;
+    s.read((char*)&obj, 2);
+    return le16toh(obj);
+}
+template<typename Stream> inline uint32_t ser_readdata32(Stream &s)
+{
+    uint32_t obj;
+    s.read((char*)&obj, 4);
+    return le32toh(obj);
+}
+template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
+{
+    uint64_t obj;
+    s.read((char*)&obj, 8);
+    return le64toh(obj);
+}
+inline uint64_t ser_double_to_uint64(double x)
+{
+    union { double x; uint64_t y; } tmp;
+    tmp.x = x;
+    return tmp.y;
+}
+inline uint32_t ser_float_to_uint32(float x)
+{
+    union { float x; uint32_t y; } tmp;
+    tmp.x = x;
+    return tmp.y;
+}
+inline double ser_uint64_to_double(uint64_t y)
+{
+    union { double x; uint64_t y; } tmp;
+    tmp.y = y;
+    return tmp.x;
+}
+inline float ser_uint32_to_float(uint32_t y)
+{
+    union { float x; uint32_t y; } tmp;
+    tmp.y = y;
+    return tmp.x;
+}
+
 
 /////////////////////////////////////////////////////////////////
 //
@@ -89,188 +192,59 @@ enum {
 /*
  * Basic Types
  */
-#define WRITEDATA(s, obj) s.write((char*)&(obj), sizeof(obj))
-#define READDATA(s, obj) s.read((char*)&(obj), sizeof(obj))
+inline unsigned int GetSerializeSize(char a,      int, int=0) { return 1; }
+inline unsigned int GetSerializeSize(int8_t a,    int, int=0) { return 1; }
+inline unsigned int GetSerializeSize(uint8_t a,   int, int=0) { return 1; }
+inline unsigned int GetSerializeSize(int16_t a,   int, int=0) { return 2; }
+inline unsigned int GetSerializeSize(uint16_t a,  int, int=0) { return 2; }
+inline unsigned int GetSerializeSize(int32_t a,   int, int=0) { return 4; }
+inline unsigned int GetSerializeSize(uint32_t a,  int, int=0) { return 4; }
+inline unsigned int GetSerializeSize(int64_t a,   int, int=0) { return 8; }
+inline unsigned int GetSerializeSize(uint64_t a,  int, int=0) { return 8; }
+inline unsigned int GetSerializeSize(float a,     int, int=0) { return 4; }
+inline unsigned int GetSerializeSize(double a,    int, int=0) { return 8; }
 
-inline unsigned int GetSerializeSize(char a, int, int = 0)
-{
-    return sizeof(a);
-}
-inline unsigned int GetSerializeSize(signed char a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(unsigned char a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(signed short a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(unsigned short a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(signed int a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(unsigned int a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(signed long a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(unsigned long a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(signed long long a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(unsigned long long a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(float a, int, int = 0) { return sizeof(a); }
-inline unsigned int GetSerializeSize(double a, int, int = 0) { return sizeof(a); }
+template<typename Stream> inline void Serialize(Stream& s, char a,         int, int=0) { ser_writedata8(s, a); } // TODO Get rid of bare char
+template<typename Stream> inline void Serialize(Stream& s, int8_t a,       int, int=0) { ser_writedata8(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, uint8_t a,      int, int=0) { ser_writedata8(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, int16_t a,      int, int=0) { ser_writedata16(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, uint16_t a,     int, int=0) { ser_writedata16(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, int32_t a,      int, int=0) { ser_writedata32(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, uint32_t a,     int, int=0) { ser_writedata32(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, int64_t a,      int, int=0) { ser_writedata64(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, uint64_t a,     int, int=0) { ser_writedata64(s, a); }
+template<typename Stream> inline void Serialize(Stream& s, float a,        int, int=0) { ser_writedata32(s, ser_float_to_uint32(a)); }
+template<typename Stream> inline void Serialize(Stream& s, double a,       int, int=0) { ser_writedata64(s, ser_double_to_uint64(a)); }
 
-template <typename Stream>
-inline void Serialize(Stream& s, char a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, signed char a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, unsigned char a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, signed short a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, unsigned short a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, signed int a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, unsigned int a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, signed long a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, unsigned long a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, signed long long a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, unsigned long long a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, float a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-template <typename Stream>
-inline void Serialize(Stream& s, double a, int, int = 0)
-{
-    WRITEDATA(s, a);
-}
-
-template <typename Stream>
-inline void Unserialize(Stream& s, char& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, signed char& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, unsigned char& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, signed short& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, unsigned short& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, signed int& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, unsigned int& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, signed long& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, unsigned long& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, signed long long& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, unsigned long long& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, float& a, int, int = 0)
-{
-    READDATA(s, a);
-}
-template <typename Stream>
-inline void Unserialize(Stream& s, double& a, int, int = 0)
-{
-    READDATA(s, a);
-}
+template<typename Stream> inline void Unserialize(Stream& s, char& a,      int, int=0) { a = ser_readdata8(s); } // TODO Get rid of bare char
+template<typename Stream> inline void Unserialize(Stream& s, int8_t& a,    int, int=0) { a = ser_readdata8(s); }
+template<typename Stream> inline void Unserialize(Stream& s, uint8_t& a,   int, int=0) { a = ser_readdata8(s); }
+template<typename Stream> inline void Unserialize(Stream& s, int16_t& a,   int, int=0) { a = ser_readdata16(s); }
+template<typename Stream> inline void Unserialize(Stream& s, uint16_t& a,  int, int=0) { a = ser_readdata16(s); }
+template<typename Stream> inline void Unserialize(Stream& s, int32_t& a,   int, int=0) { a = ser_readdata32(s); }
+template<typename Stream> inline void Unserialize(Stream& s, uint32_t& a,  int, int=0) { a = ser_readdata32(s); }
+template<typename Stream> inline void Unserialize(Stream& s, int64_t& a,   int, int=0) { a = ser_readdata64(s); }
+template<typename Stream> inline void Unserialize(Stream& s, uint64_t& a,  int, int=0) { a = ser_readdata64(s); }
+template<typename Stream> inline void Unserialize(Stream& s, float& a,     int, int=0) { a = ser_uint32_to_float(ser_readdata32(s)); }
+template<typename Stream> inline void Unserialize(Stream& s, double& a,    int, int=0) { a = ser_uint64_to_double(ser_readdata64(s)); }
 
 inline unsigned int GetSerializeSize(bool a, int, int = 0) { return sizeof(char); }
-template <typename Stream>
-inline void Serialize(Stream& s, bool a, int, int = 0)
-{
-    char f = a;
-    WRITEDATA(s, f);
-}
+template<typename Stream> inline void Serialize(Stream& s, bool a, int, int=0)    { char f=a; ser_writedata8(s, f); }
+template<typename Stream> inline void Unserialize(Stream& s, bool& a, int, int=0) { char f=ser_readdata8(s); a=f; }
 
-
-template <typename Stream>
-inline void Unserialize(Stream& s, bool& a, int, int = 0)
-{
-    char f;
-    READDATA(s, f);
-    a = f;
-}
 // Serializatin for libzerocoin::CoinDenomination
 inline unsigned int GetSerializeSize(libzerocoin::CoinDenomination a, int, int = 0) { return sizeof(libzerocoin::CoinDenomination); }
 template <typename Stream>
 inline void Serialize(Stream& s, libzerocoin::CoinDenomination a, int, int = 0)
 {
     int f = libzerocoin::ZerocoinDenominationToInt(a);
-    WRITEDATA(s, f);
+    ser_writedata32(s, f);
 }
 
 template <typename Stream>
 inline void Unserialize(Stream& s, libzerocoin::CoinDenomination& a, int, int = 0)
 {
-    int f=0;
-    READDATA(s, f);
+    int f = ser_readdata32(s);
     a = libzerocoin::IntToZerocoinDenomination(f);
 }
 
@@ -280,14 +254,13 @@ template <typename Stream>
 inline void Serialize(Stream& s, libzerocoin::SpendType a, int, int = 0)
 {
     uint8_t f = static_cast<uint8_t>(a);
-    WRITEDATA(s, f);
+    ser_writedata8(s, f);
 }
 
 template <typename Stream>
 inline void Unserialize(Stream& s, libzerocoin::SpendType & a, int, int = 0)
 {
-    uint8_t f=0;
-    READDATA(s, f);
+    uint8_t f = ser_readdata8(s);
     a = static_cast<libzerocoin::SpendType>(f);
 }
 
@@ -297,14 +270,13 @@ template <typename Stream>
 inline void Serialize(Stream& s, SporkId sporkID, int, int = 0)
 {
     int32_t f = static_cast<int32_t>(sporkID);
-    WRITEDATA(s, f);
+    ser_writedata32(s, f);
 }
 
 template <typename Stream>
 inline void Unserialize(Stream& s, SporkId& sporkID, int, int = 0)
 {
-    int32_t f=0;
-    READDATA(s, f);
+    int32_t f = ser_readdata32(s);
     sporkID = (SporkId) f;
 }
 
@@ -332,23 +304,16 @@ template <typename Stream>
 void WriteCompactSize(Stream& os, uint64_t nSize)
 {
     if (nSize < 253) {
-        unsigned char chSize = nSize;
-        WRITEDATA(os, chSize);
+        ser_writedata8(os, nSize);
     } else if (nSize <= std::numeric_limits<unsigned short>::max()) {
-        unsigned char chSize = 253;
-        unsigned short xSize = nSize;
-        WRITEDATA(os, chSize);
-        WRITEDATA(os, xSize);
+        ser_writedata8(os, 253);
+        ser_writedata16(os, nSize);
     } else if (nSize <= std::numeric_limits<unsigned int>::max()) {
-        unsigned char chSize = 254;
-        unsigned int xSize = nSize;
-        WRITEDATA(os, chSize);
-        WRITEDATA(os, xSize);
+        ser_writedata8(os, 254);
+        ser_writedata32(os, nSize);
     } else {
-        unsigned char chSize = 255;
-        uint64_t xSize = nSize;
-        WRITEDATA(os, chSize);
-        WRITEDATA(os, xSize);
+        ser_writedata8(os, 255);
+        ser_writedata64(os, nSize);
     }
     return;
 }
@@ -356,27 +321,20 @@ void WriteCompactSize(Stream& os, uint64_t nSize)
 template <typename Stream>
 uint64_t ReadCompactSize(Stream& is)
 {
-    unsigned char chSize;
-    READDATA(is, chSize);
+    uint8_t chSize = ser_readdata8(is);
     uint64_t nSizeRet = 0;
     if (chSize < 253) {
         nSizeRet = chSize;
     } else if (chSize == 253) {
-        unsigned short xSize;
-        READDATA(is, xSize);
-        nSizeRet = xSize;
+        nSizeRet = ser_readdata16(is);
         if (nSizeRet < 253)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
     } else if (chSize == 254) {
-        unsigned int xSize;
-        READDATA(is, xSize);
-        nSizeRet = xSize;
+        nSizeRet = ser_readdata32(is);
         if (nSizeRet < 0x10000u)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
     } else {
-        uint64_t xSize;
-        READDATA(is, xSize);
-        nSizeRet = xSize;
+        nSizeRet = ser_readdata64(is);
         if (nSizeRet < 0x100000000ULL)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
     }
@@ -435,7 +393,7 @@ void WriteVarInt(Stream& os, I n)
         len++;
     }
     do {
-        WRITEDATA(os, tmp[len]);
+        ser_writedata8(os, tmp[len]);
     } while (len--);
 }
 
@@ -444,8 +402,7 @@ I ReadVarInt(Stream& is)
 {
     I n = 0;
     while (true) {
-        unsigned char chData;
-        READDATA(is, chData);
+        unsigned char chData = ser_readdata8(is);
         n = (n << 7) | (chData & 0x7F);
         if (chData & 0x80)
             n++;
@@ -474,6 +431,12 @@ public:
     {
         pbegin = (char*)v.data();
         pend = (char*)(v.data() + v.size());
+    }
+    template <unsigned int N, typename T, typename S, typename D>
+    explicit CFlatData(prevector<N, T, S, D> &v)
+    {
+        pbegin = (char*)begin_ptr(v);
+        pend = (char*)end_ptr(v);
     }
     char* begin() { return pbegin; }
     const char* begin() const { return pbegin; }
@@ -581,6 +544,20 @@ template <typename Stream, typename C>
 void Unserialize(Stream& is, std::basic_string<C>& str, int, int = 0);
 
 /**
+ * prevector
+ * prevectors of unsigned char are a special case and are intended to be serialized as a single opaque blob.
+ */
+template<unsigned int N, typename T> unsigned int GetSerializeSize_impl(const prevector<N, T>& v, int nType, int nVersion, const unsigned char&);
+template<unsigned int N, typename T, typename V> unsigned int GetSerializeSize_impl(const prevector<N, T>& v, int nType, int nVersion, const V&);
+template<unsigned int N, typename T> inline unsigned int GetSerializeSize(const prevector<N, T>& v, int nType, int nVersion);
+template<typename Stream, unsigned int N, typename T> void Serialize_impl(Stream& os, const prevector<N, T>& v, int nType, int nVersion, const unsigned char&);
+template<typename Stream, unsigned int N, typename T, typename V> void Serialize_impl(Stream& os, const prevector<N, T>& v, int nType, int nVersion, const V&);
+template<typename Stream, unsigned int N, typename T> inline void Serialize(Stream& os, const prevector<N, T>& v, int nType, int nVersion);
+template<typename Stream, unsigned int N, typename T> void Unserialize_impl(Stream& is, prevector<N, T>& v, int nType, int nVersion, const unsigned char&);
+template<typename Stream, unsigned int N, typename T, typename V> void Unserialize_impl(Stream& is, prevector<N, T>& v, int nType, int nVersion, const V&);
+template<typename Stream, unsigned int N, typename T> inline void Unserialize(Stream& is, prevector<N, T>& v, int nType, int nVersion);
+
+/**
  * vector
  * vectors of unsigned char are a special case and are intended to be serialized as a single opaque blob.
  */
@@ -602,15 +579,6 @@ template <typename Stream, typename T, typename A, typename V>
 void Unserialize_impl(Stream& is, std::vector<T, A>& v, int nType, int nVersion, const V&);
 template <typename Stream, typename T, typename A>
 inline void Unserialize(Stream& is, std::vector<T, A>& v, int nType, int nVersion);
-
-/**
- * others derived from vector
- */
-extern inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion);
-template <typename Stream>
-void Serialize(Stream& os, const CScript& v, int nType, int nVersion);
-template <typename Stream>
-void Unserialize(Stream& is, CScript& v, int nType, int nVersion);
 
 /**
  * pair
@@ -693,6 +661,97 @@ void Unserialize(Stream& is, std::basic_string<C>& str, int, int)
     if (nSize != 0)
         is.read((char*)&str[0], nSize * sizeof(str[0]));
 }
+
+
+
+/**
+ * prevector
+ */
+template<unsigned int N, typename T>
+unsigned int GetSerializeSize_impl(const prevector<N, T>& v, int nType, int nVersion, const unsigned char&)
+{
+    return (GetSizeOfCompactSize(v.size()) + v.size() * sizeof(T));
+}
+
+template<unsigned int N, typename T, typename V>
+unsigned int GetSerializeSize_impl(const prevector<N, T>& v, int nType, int nVersion, const V&)
+{
+    unsigned int nSize = GetSizeOfCompactSize(v.size());
+    for (typename prevector<N, T>::const_iterator vi = v.begin(); vi != v.end(); ++vi)
+        nSize += GetSerializeSize((*vi), nType, nVersion);
+    return nSize;
+}
+
+template<unsigned int N, typename T>
+inline unsigned int GetSerializeSize(const prevector<N, T>& v, int nType, int nVersion)
+{
+    return GetSerializeSize_impl(v, nType, nVersion, T());
+}
+
+
+template<typename Stream, unsigned int N, typename T>
+void Serialize_impl(Stream& os, const prevector<N, T>& v, int nType, int nVersion, const unsigned char&)
+{
+    WriteCompactSize(os, v.size());
+    if (!v.empty())
+        os.write((char*)&v[0], v.size() * sizeof(T));
+}
+
+template<typename Stream, unsigned int N, typename T, typename V>
+void Serialize_impl(Stream& os, const prevector<N, T>& v, int nType, int nVersion, const V&)
+{
+    WriteCompactSize(os, v.size());
+    for (typename prevector<N, T>::const_iterator vi = v.begin(); vi != v.end(); ++vi)
+        ::Serialize(os, (*vi), nType, nVersion);
+}
+
+template<typename Stream, unsigned int N, typename T>
+inline void Serialize(Stream& os, const prevector<N, T>& v, int nType, int nVersion)
+{
+    Serialize_impl(os, v, nType, nVersion, T());
+}
+
+
+template<typename Stream, unsigned int N, typename T>
+void Unserialize_impl(Stream& is, prevector<N, T>& v, int nType, int nVersion, const unsigned char&)
+{
+    // Limit size per read so bogus size value won't cause out of memory
+    v.clear();
+    unsigned int nSize = ReadCompactSize(is);
+    unsigned int i = 0;
+    while (i < nSize)
+    {
+        unsigned int blk = std::min(nSize - i, (unsigned int)(1 + 4999999 / sizeof(T)));
+        v.resize(i + blk);
+        is.read((char*)&v[i], blk * sizeof(T));
+        i += blk;
+    }
+}
+
+template<typename Stream, unsigned int N, typename T, typename V>
+void Unserialize_impl(Stream& is, prevector<N, T>& v, int nType, int nVersion, const V&)
+{
+    v.clear();
+    unsigned int nSize = ReadCompactSize(is);
+    unsigned int i = 0;
+    unsigned int nMid = 0;
+    while (nMid < nSize)
+    {
+        nMid += 5000000 / sizeof(T);
+        if (nMid > nSize)
+            nMid = nSize;
+        v.resize(nMid);
+        for (; i < nMid; i++)
+            Unserialize(is, v[i], nType, nVersion);
+    }
+}
+
+template<typename Stream, unsigned int N, typename T>
+inline void Unserialize(Stream& is, prevector<N, T>& v, int nType, int nVersion)
+{
+    Unserialize_impl(is, v, nType, nVersion, T());
+}
+
 
 
 /**
@@ -781,26 +840,6 @@ inline void Unserialize(Stream& is, std::vector<T, A>& v, int nType, int nVersio
     Unserialize_impl(is, v, nType, nVersion, T());
 }
 
-
-/**
- * others derived from vector
- */
-inline unsigned int GetSerializeSize(const CScript& v, int nType, int nVersion)
-{
-    return GetSerializeSize((const std::vector<unsigned char>&)v, nType, nVersion);
-}
-
-template <typename Stream>
-void Serialize(Stream& os, const CScript& v, int nType, int nVersion)
-{
-    Serialize(os, (const std::vector<unsigned char>&)v, nType, nVersion);
-}
-
-template <typename Stream>
-void Unserialize(Stream& is, CScript& v, int nType, int nVersion)
-{
-    Unserialize(is, (std::vector<unsigned char>&)v, nType, nVersion);
-}
 
 
 /**

@@ -23,12 +23,13 @@ public:
     ~NavMenuWidget();
 
     void loadWalletModel() override;
+    virtual void showEvent(QShowEvent *event) override;
 
-public slots:
+public Q_SLOTS:
     void selectSettings();
     void onShowHideColdStakingChanged(bool show);
 
-private slots:
+private Q_SLOTS:
     void onSendClicked();
     void onDashboardClicked();
     void onPrivacyClicked();
@@ -44,6 +45,8 @@ private:
 
     void connectActions();
     void onNavSelected(QWidget* active, bool startup = false);
+
+    bool init = false;
 };
 
 #endif // NAVMENUWIDGET_H

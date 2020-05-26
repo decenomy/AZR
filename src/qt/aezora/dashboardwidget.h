@@ -50,12 +50,12 @@ public:
     explicit SortEdit(QWidget* parent = nullptr) : QLineEdit(parent){}
 
     inline void mousePressEvent(QMouseEvent *) override{
-        emit Mouse_Pressed();
+        Q_EMIT Mouse_Pressed();
     }
 
     ~SortEdit() override{}
 
-signals:
+Q_SIGNALS:
     void Mouse_Pressed();
 
 };
@@ -105,17 +105,17 @@ public:
     void run(int type) override;
     void onError(QString error, int type) override;
 
-public slots:
+public Q_SLOTS:
     void walletSynced(bool isSync);
     /**
      * Show incoming transaction notification for new transactions.
      * The new items are those between start and end inclusive, under the given parent item.
     */
     void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
-signals:
+Q_SIGNALS:
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address);
-private slots:
+private Q_SLOTS:
     void handleTransactionClicked(const QModelIndex &index);
     void changeTheme(bool isLightTheme, QString &theme) override;
     void onSortChanged(const QString&);
@@ -125,7 +125,7 @@ private slots:
     void onTxArrived(const QString& hash, const bool& isCoinStake, const bool& isCSAnyType);
 
 #ifdef USE_QTCHARTS
-    void windowResizeEvent(QResizeEvent *event);
+    void windowResizeEvent(QResizeEvent* event);
     void changeChartColors();
     void onChartYearChanged(const QString&);
     void onChartMonthChanged(const QString&);
@@ -167,6 +167,7 @@ private:
 
     ChartData* chartData = nullptr;
     bool hasStakes = false;
+    bool fShowCharts = true;
 
     void initChart();
     void showHideEmptyChart(bool show, bool loading, bool forceView = false);
@@ -179,8 +180,9 @@ private:
     void setChartShow(ChartShowType type);
     std::pair<int, int> getChartRange(QMap<int, std::pair<qint64, qint64>> amountsBy);
 
-private slots:
+private Q_SLOTS:
     void onChartRefreshed();
+    void onHideChartsChanged(bool fHide);
 
 #endif
 

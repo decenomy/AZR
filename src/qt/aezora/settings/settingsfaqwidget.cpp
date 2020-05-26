@@ -8,15 +8,13 @@
 #include <QMetaObject>
 #include "qt/aezora/qtutils.h"
 
-SettingsFaqWidget::SettingsFaqWidget(QWidget *parent) :
+SettingsFaqWidget::SettingsFaqWidget(AEZORAGUI *parent) :
     QDialog(parent),
     ui(new Ui::SettingsFaqWidget)
 {
     ui->setupUi(this);
-
     this->setStyleSheet(parent->styleSheet());
 
-    ui->labelTitle->setText(tr("Frequently Asked Questions"));
 #ifdef Q_OS_MAC
     ui->container->load("://bg-welcome");
     setCssProperty(ui->container, "container-welcome-no-image");
@@ -84,95 +82,106 @@ SettingsFaqWidget::SettingsFaqWidget(QWidget *parent) :
     ui->labelContent3->setOpenExternalLinks(true);
     ui->labelContent5->setOpenExternalLinks(true);
     ui->labelContent8->setOpenExternalLinks(true);
-    ui->labelWebLink->setOpenExternalLinks(true);
 
     // Exit button
-    ui->pushButtonExit->setText(tr("Exit"));
     setCssProperty(ui->pushButtonExit, "btn-faq-exit");
 
     // Web Link
-    ui->pushButtonWebLink->setText("");
     setCssProperty(ui->pushButtonWebLink, "btn-faq-web");
     setCssProperty(ui->containerButtons, "container-faq-buttons");
 
     // Buttons
-    connect(ui->pushButtonExit, SIGNAL(clicked()), this, SLOT(close()));
-    connect(ui->pushButtonFaq1, SIGNAL(clicked()), this, SLOT(onFaq1Clicked()));
-    connect(ui->pushButtonFaq2, SIGNAL(clicked()), this, SLOT(onFaq2Clicked()));
-    connect(ui->pushButtonFaq3, SIGNAL(clicked()), this, SLOT(onFaq3Clicked()));
-    connect(ui->pushButtonFaq4, SIGNAL(clicked()), this, SLOT(onFaq4Clicked()));
-    connect(ui->pushButtonFaq5, SIGNAL(clicked()), this, SLOT(onFaq5Clicked()));
-    connect(ui->pushButtonFaq6, SIGNAL(clicked()), this, SLOT(onFaq6Clicked()));
-    connect(ui->pushButtonFaq7, SIGNAL(clicked()), this, SLOT(onFaq7Clicked()));
-    connect(ui->pushButtonFaq8, SIGNAL(clicked()), this, SLOT(onFaq8Clicked()));
-    connect(ui->pushButtonFaq9, SIGNAL(clicked()), this, SLOT(onFaq9Clicked()));
-    connect(ui->pushButtonFaq10, SIGNAL(clicked()), this, SLOT(onFaq10Clicked()));
+    connect(ui->pushButtonExit, &QPushButton::clicked, this, &SettingsFaqWidget::close);
+    connect(ui->pushButtonFaq1, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq1Clicked);
+    connect(ui->pushButtonFaq2, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq2Clicked);
+    connect(ui->pushButtonFaq3, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq3Clicked);
+    connect(ui->pushButtonFaq4, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq4Clicked);
+    connect(ui->pushButtonFaq5, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq5Clicked);
+    connect(ui->pushButtonFaq6, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq6Clicked);
+    connect(ui->pushButtonFaq7, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq7Clicked);
+    connect(ui->pushButtonFaq8, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq8Clicked);
+    connect(ui->pushButtonFaq9, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq9Clicked);
+    connect(ui->pushButtonFaq10, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq10Clicked);
 
     if (parent)
-        connect(parent, SIGNAL(windowResizeEvent(QResizeEvent*)), this, SLOT(windowResizeEvent(QResizeEvent*)));
+        connect(parent, &AEZORAGUI::windowResizeEvent, this, &SettingsFaqWidget::windowResizeEvent);
 }
 
-void SettingsFaqWidget::showEvent(QShowEvent *event){
-    if(pos != 0){
+void SettingsFaqWidget::showEvent(QShowEvent *event)
+{
+    if (pos != 0) {
         QPushButton* btn = getButtons()[pos - 1];
         QMetaObject::invokeMethod(btn, "setChecked", Qt::QueuedConnection, Q_ARG(bool, true));
         QMetaObject::invokeMethod(btn, "clicked", Qt::QueuedConnection);
     }
 }
 
-void SettingsFaqWidget::setSection(int num){
+void SettingsFaqWidget::setSection(int num)
+{
     if (num < 1 || num > 10)
         return;
     pos = num;
 }
 
-void SettingsFaqWidget::onFaq1Clicked(){
+void SettingsFaqWidget::onFaq1Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq1->y());
 }
 
-void SettingsFaqWidget::onFaq2Clicked(){
+void SettingsFaqWidget::onFaq2Clicked()
+{
    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq2->y());
 }
 
-void SettingsFaqWidget::onFaq3Clicked(){
+void SettingsFaqWidget::onFaq3Clicked()
+{
    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq3->y());
 }
 
-void SettingsFaqWidget::onFaq4Clicked(){
+void SettingsFaqWidget::onFaq4Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq4->y());
 }
 
-void SettingsFaqWidget::onFaq5Clicked(){
+void SettingsFaqWidget::onFaq5Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq5->y());
 }
 
-void SettingsFaqWidget::onFaq6Clicked(){
+void SettingsFaqWidget::onFaq6Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq6->y());
 }
 
-void SettingsFaqWidget::onFaq7Clicked(){
+void SettingsFaqWidget::onFaq7Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq7->y());
 }
 
-void SettingsFaqWidget::onFaq8Clicked(){
+void SettingsFaqWidget::onFaq8Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq8->y());
 }
 
-void SettingsFaqWidget::onFaq9Clicked(){
+void SettingsFaqWidget::onFaq9Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq9->y());
 }
 
-void SettingsFaqWidget::onFaq10Clicked(){
+void SettingsFaqWidget::onFaq10Clicked()
+{
     ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq10->y());
 }
 
-void SettingsFaqWidget::windowResizeEvent(QResizeEvent* event){
+void SettingsFaqWidget::windowResizeEvent(QResizeEvent* event)
+{
     QWidget* w = qobject_cast<QWidget*>(parent());
     this->resize(w->width(), w->height());
     this->move(QPoint(0, 0));
 }
 
-std::vector<QPushButton*> SettingsFaqWidget::getButtons(){
+std::vector<QPushButton*> SettingsFaqWidget::getButtons()
+{
     return {
             ui->pushButtonFaq1,
             ui->pushButtonFaq2,
@@ -187,7 +196,8 @@ std::vector<QPushButton*> SettingsFaqWidget::getButtons(){
     };
 }
 
-SettingsFaqWidget::~SettingsFaqWidget(){
+SettingsFaqWidget::~SettingsFaqWidget()
+{
     delete ui;
 }
 

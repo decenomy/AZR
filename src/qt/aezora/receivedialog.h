@@ -5,7 +5,7 @@
 #ifndef RECEIVEDIALOG_H
 #define RECEIVEDIALOG_H
 
-#include <QDialog>
+#include "qt/aezora/focuseddialog.h"
 #include <QPixmap>
 
 class SendCoinsRecipient;
@@ -14,7 +14,7 @@ namespace Ui {
 class ReceiveDialog;
 }
 
-class ReceiveDialog : public QDialog
+class ReceiveDialog : public FocusedDialog
 {
     Q_OBJECT
 
@@ -24,7 +24,7 @@ public:
 
     void updateQr(QString address);
 
-private slots:
+private Q_SLOTS:
     void onCopy();
 private:
     Ui::ReceiveDialog *ui;

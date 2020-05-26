@@ -10,7 +10,6 @@
 #include "key.h"
 #include "masternode.h"
 #include "net.h"
-#include "obfuscation.h"
 #include "sync.h"
 #include "wallet/wallet.h"
 
@@ -25,7 +24,7 @@ class CActiveMasternode
 {
 private:
     // critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
     /// Ping Masternode
     bool SendMasternodePing(std::string& errorMessage);

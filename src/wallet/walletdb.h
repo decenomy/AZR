@@ -9,8 +9,10 @@
 
 #include "amount.h"
 #include "wallet/db.h"
+#include "wallet/hdchain.h"
 #include "key.h"
 #include "keystore.h"
+#include "script/keyorigin.h"
 #include "zazr/zerocoin.h"
 #include "libzerocoin/Accumulator.h"
 #include "libzerocoin/Denominations.h"
@@ -24,7 +26,6 @@
 
 class CAccount;
 class CAccountingEntry;
-class CBitcoinAddress;
 struct CBlockLocator;
 class CKeyPool;
 class CMasterKey;
@@ -50,9 +51,16 @@ enum DBErrors {
 class CKeyMetadata
 {
 public:
-    static const int CURRENT_VERSION = 1;
+    // Metadata versions
+    static const int VERSION_BASIC = 1;
+    static const int VERSION_WITH_KEY_ORIGIN = 12;
+    // Active version
+    static const int CURRENT_VERSION = VERSION_WITH_KEY_ORIGIN;
+
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
+    CKeyID hd_seed_id; //id of the HD seed used to derive this key
+    KeyOriginInfo key_origin; // Key origin info with path and fingerprint
 
     CKeyMetadata()
     {
@@ -60,7 +68,7 @@ public:
     }
     CKeyMetadata(int64_t nCreateTime_)
     {
-        nVersion = CKeyMetadata::CURRENT_VERSION;
+        SetNull();
         nCreateTime = nCreateTime_;
     }
 
@@ -70,14 +78,24 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(nCreateTime);
+        if (HasKeyOrigin()) {
+            READWRITE(hd_seed_id);
+            READWRITE(key_origin);
+        }
     }
 
     void SetNull()
     {
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
+        hd_seed_id.SetNull();
+        key_origin.clear();
+    }
+
+    bool HasKeyOrigin() const
+    {
+        return this->nVersion >= VERSION_WITH_KEY_ORIGIN;
     }
 };
 
@@ -102,9 +120,6 @@ public:
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata& keyMeta);
     bool WriteMasterKey(unsigned int nID, const CMasterKey& kMasterKey);
 
-    bool WriteAutoConvertKey(const CBitcoinAddress& btcAddress);
-    void LoadAutoConvertKeys(std::set<CBitcoinAddress>& setAddresses);
-
     bool WriteCScript(const uint160& hash, const CScript& redeemScript);
 
     bool WriteWatchOnly(const CScript& script);
@@ -118,8 +133,9 @@ public:
 
     bool WriteOrderPosNext(int64_t nOrderPosNext);
 
-    // presstab
-    bool WriteStakeSplitThreshold(uint64_t nStakeSplitThreshold);
+    bool WriteStakeSplitThreshold(const CAmount& nStakeSplitThreshold);
+    bool WriteUseCustomFee(bool fUse);
+    bool WriteCustomFeeValue(const CAmount& nCustomFee);
     bool WriteMultiSend(std::vector<std::pair<std::string, int> > vMultiSend);
     bool EraseMultiSend(std::vector<std::pair<std::string, int> > vMultiSend);
     bool WriteMSettings(bool fMultiSendStake, bool fMultiSendMasternode, int nLastMultiSendHeight);
@@ -139,6 +155,9 @@ public:
 
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
+
+    //! write the hdchain model (external/internal chain child index counter)
+    bool WriteHDChain(const CHDChain& chain);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string& address, const std::string& key, const std::string& value);
@@ -187,13 +206,6 @@ public:
     bool ReadZAZRCount(uint32_t& nCount);
     std::map<uint256, std::vector<std::pair<uint256, uint32_t> > > MapMintPool();
     bool WriteMintPoolPair(const uint256& hashMasterSeed, const uint256& hashPubcoin, const uint32_t& nCount);
-
-    void LoadPrecomputes(std::list<std::pair<uint256, CoinWitnessCacheData> >& itemList, std::map<uint256, std::list<std::pair<uint256, CoinWitnessCacheData> >::iterator>& itemMap);
-    void LoadPrecomputes(std::set<uint256> setHashes);
-    void EraseAllPrecomputes();
-    bool WritePrecompute(const uint256& hash, const CoinWitnessCacheData& data);
-    bool ReadPrecompute(const uint256& hash, CoinWitnessCacheData& data);
-    bool ErasePrecompute(const uint256& hash);
 
 private:
     CWalletDB(const CWalletDB&);

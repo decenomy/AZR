@@ -5,10 +5,11 @@
 #ifndef MASTERNODEWIZARDDIALOG_H
 #define MASTERNODEWIZARDDIALOG_H
 
-#include <QDialog>
 #include "walletmodel.h"
+#include "qt/aezora/focuseddialog.h"
 #include "qt/aezora/snackbar.h"
 #include "masternodeconfig.h"
+#include "qt/aezora/pwidget.h"
 
 class WalletModel;
 
@@ -17,7 +18,7 @@ class MasterNodeWizardDialog;
 class QPushButton;
 }
 
-class MasterNodeWizardDialog : public QDialog
+class MasterNodeWizardDialog : public FocusedDialog, public PWidget::Translator
 {
     Q_OBJECT
 
@@ -25,13 +26,14 @@ public:
     explicit MasterNodeWizardDialog(WalletModel *walletMode, QWidget *parent = nullptr);
     ~MasterNodeWizardDialog();
     void showEvent(QShowEvent *event) override;
+    QString translate(const char *msg) override { return tr(msg); }
 
     QString returnStr = "";
     bool isOk = false;
     CMasternodeConfig::CMasternodeEntry* mnEntry = nullptr;
 
-private slots:
-    void onNextClicked();
+private Q_SLOTS:
+    void accept() override;
     void onBackClicked();
 private:
     Ui::MasterNodeWizardDialog *ui;
@@ -43,10 +45,6 @@ private:
 
     WalletModel *walletModel = nullptr;
     bool createMN();
-    // Process WalletModel::SendCoinsReturn and generate a pair consisting
-    // of a message and message flags for use in emit message().
-    // Additional parameter msgArg can be used via .arg(msgArg).
-    void processSendCoinsReturn(const WalletModel::SendCoinsReturn& sendCoinsReturn, const QString& msgArg = QString(), bool fPrepare = false);
     void inform(QString text);
     void initBtn(std::initializer_list<QPushButton*> args);
 };

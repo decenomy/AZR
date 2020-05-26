@@ -27,7 +27,11 @@ public:
 
     void setMapper(QDataWidgetMapper *mapper);
 
-public slots:
+Q_SIGNALS:
+    void saveSettings();
+    void discardSettings();
+
+public Q_SLOTS:
     void onResetClicked();
 
 private:

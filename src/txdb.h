@@ -22,9 +22,37 @@ class uint256;
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 100;
 //! max. -dbcache in (MiB)
-static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 4096 : 1024;
+static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
 //! min. -dbcache in (MiB)
 static const int64_t nMinDbCache = 4;
+
+struct CDiskTxPos : public CDiskBlockPos {
+    unsigned int nTxOffset; // after header
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        READWRITE(*(CDiskBlockPos*)this);
+        READWRITE(VARINT(nTxOffset));
+    }
+
+    CDiskTxPos(const CDiskBlockPos& blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn)
+    {
+    }
+
+    CDiskTxPos()
+    {
+        SetNull();
+    }
+
+    void SetNull()
+    {
+        CDiskBlockPos::SetNull();
+        nTxOffset = 0;
+    }
+};
 
 /** CCoinsView backed by the LevelDB coin database (chainstate/) */
 class CCoinsViewDB : public CCoinsView
@@ -66,6 +94,9 @@ public:
     bool WriteInt(const std::string& name, int nValue);
     bool ReadInt(const std::string& name, int& nValue);
     bool LoadBlockIndexGuts();
+    bool ReadLegacyBlockIndex(const uint256& blockHash, CLegacyBlockIndex& biRet);
+    bool WriteMoneySupply(const int64_t& nSupply);
+    bool ReadMoneySupply(int64_t& nSupply) const;
 };
 
 /** Zerocoin database (zerocoin/) */
@@ -90,9 +121,15 @@ public:
     bool EraseCoinMint(const CBigNum& bnPubcoin);
     bool EraseCoinSpend(const CBigNum& bnSerial);
     bool WipeCoins(std::string strType);
-    bool WriteAccumulatorValue(const uint32_t& nChecksum, const CBigNum& bnValue);
-    bool ReadAccumulatorValue(const uint32_t& nChecksum, CBigNum& bnValue);
-    bool EraseAccumulatorValue(const uint32_t& nChecksum);
+
+    /** Map supply [denom] --> supply     */
+    bool WriteZCSupply(const std::map<libzerocoin::CoinDenomination, int64_t>& mapZCS);
+    bool ReadZCSupply(std::map<libzerocoin::CoinDenomination, int64_t>& mapZCS) const;
+    /** Accumulators (only for zPoS IBD): [checksum, denom] --> block height **/
+    bool WriteAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, const int nHeight);
+    bool ReadAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom, int& nHeightRet);
+    bool EraseAccChecksum(const uint32_t& nChecksum, const libzerocoin::CoinDenomination denom);
+    bool WipeAccChecksums();
 };
 
 #endif // BITCOIN_TXDB_H

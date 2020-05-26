@@ -46,7 +46,7 @@ bool TransactionFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex& 
         return false;
     if (fHideOrphans && isOrphan(status, type))
         return false;
-    if (!(TYPE(type) & typeFilter))
+    if (!(bool)(TYPE(type) & typeFilter))
         return false;
     if (involvesWatchAddress && watchOnlyFilter == WatchOnlyFilter_No)
         return false;
@@ -162,11 +162,11 @@ bool TransactionFilterProxy::isZcTx(int type) const {
 }
 
 bool TransactionFilterProxy::isStakeTx(int type) const {
-    return (type == TransactionRecord::StakeMint || type == TransactionRecord::Generated || type == TransactionRecord::StakeZAZR);
+    return type == TransactionRecord::StakeMint || type == TransactionRecord::Generated || type == TransactionRecord::StakeZAZR || type == TransactionRecord::StakeDelegated;
 }
 
 bool TransactionFilterProxy::isColdStake(int type) const {
-    return (type == TransactionRecord::P2CSDelegation || type == TransactionRecord::P2CSDelegationSent || type == TransactionRecord::StakeDelegated || type == TransactionRecord::StakeHot);
+    return type == TransactionRecord::P2CSDelegation || type == TransactionRecord::P2CSDelegationSent || type == TransactionRecord::P2CSDelegationSentOwner || type == TransactionRecord::StakeDelegated || type == TransactionRecord::StakeHot;
 }
 
 /*QVariant TransactionFilterProxy::dataFromSourcePos(int sourceRow, int role) const {
