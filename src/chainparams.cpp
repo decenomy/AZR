@@ -70,7 +70,8 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     (620, uint256S("65ae7244ad525a88b7907a531dc9702844d46d28c2f11dbd7c732093ec8c0fab"))
     (90384, uint256S("309d8f656ff173abf8aeb04092bacd35eb69693e43d31530abfaf098a394bdd6"))
     (100330, uint256S("7afd2261cc8efdaf17844e0a5a125a789914836f790c19d898e2cfe1232a008a"))
-    (181752, uint256S("3da55ef79f2c5166691074bddae58e5c6a2982ad0658577527f4ea8cdabe37e8"));
+    (181752, uint256S("3da55ef79f2c5166691074bddae58e5c6a2982ad0658577527f4ea8cdabe37e8"))
+    (201110, uint256S("e61cdeb9819a5b36e25aab3fda9af9fec91c93e625a2fe7406324f52be68a8bf"));
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
     1577461410, // * UNIX timestamp of last checkpoint block
@@ -147,7 +148,7 @@ public:
         consensus.height_start_TimeProtoV2 = 350;       // Block v7: 14e477e597d24549cac5e59d97d32155e6ec2861c1003b42d0566f9bf39b65d5
         consensus.height_start_ZC = 0;                 // Block v4: 5b2482eca24caf2a46bb22e0545db7b7037282733faa3a42ec20542509999a64
         consensus.height_start_ZC_InvalidSerials = 0;
-        consensus.height_start_ZC_PublicSpends = 0;
+        consensus.height_start_ZC_PublicSpends = 99999999;
         consensus.height_start_ZC_SerialRangeCheck = 0;
         consensus.height_start_ZC_SerialsV2 = 0;
         consensus.height_ZC_RecalcAccumulators = 0;
