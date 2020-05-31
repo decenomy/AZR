@@ -1561,7 +1561,7 @@ bool AppInit2()
                 // Recalculate money supply
                 if (fReindexMoneySupply) {
                     LOCK(cs_main);
-                    // Skip zpiv if already reindexed
+                    // Skip zazr if already reindexed
                     RecalculateAZRSupply(1, fReindexZerocoin);
                 }
 

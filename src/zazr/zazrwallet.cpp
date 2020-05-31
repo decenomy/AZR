@@ -327,7 +327,7 @@ bool CzAZRWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const 
         wallet->AddToWallet(wtx, false, &walletdb);
     }
 
-    // Add to zpivTracker which also adds to database
+    // Add to zazrTracker which also adds to database
     wallet->zazrTracker->Add(dMint, true);
 
     //Update the count if it is less than the mint's count

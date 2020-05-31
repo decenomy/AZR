@@ -250,7 +250,7 @@ bool RecalculateAZRSupply(int nHeightStart, bool fSkipZazr)
         // Rewrite money supply
         nMoneySupply += (nValueOut - nValueIn);
 
-        // Rewrite zpiv supply too
+        // Rewrite zazr supply too
         if (!fSkipZazr && pindex->nHeight >= consensus.height_start_ZC) {
             UpdateZAZRSupplyConnect(block, pindex, true);
         }

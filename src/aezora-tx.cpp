@@ -220,12 +220,11 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
 
     // extract and validate ADDRESS
     std::string strAddr = strInput.substr(pos + 1, std::string::npos);
-    CBitcoinAddress addr(strAddr);
-    if (!addr.IsValid())
+    CTxDestination destination = DecodeDestination(strAddr);
+    if (!IsValidDestination(destination)) {
         throw std::runtime_error("invalid TX output address");
-
-    // build standard output script via GetScriptForDestination()
-    CScript scriptPubKey = GetScriptForDestination(addr.Get());
+    }
+    CScript scriptPubKey = GetScriptForDestination(destination);
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
@@ -311,7 +310,7 @@ static bool findSighashFlags(int& flags, const std::string& flagStr)
 uint256 ParseHashUO(std::map<std::string, UniValue>& o, std::string strKey)
 {
     if (!o.count(strKey))
-        return 0;
+        return UINT256_ZERO;
     return ParseHashUV(o[strKey], strKey);
 }
 
@@ -388,8 +387,8 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
                 CCoinsModifier coins = view.ModifyCoins(txid);
                 if (coins->IsAvailable(nOut) && coins->vout[nOut].scriptPubKey != scriptPubKey) {
                     std::string err("Previous output scriptPubKey mismatch:\n");
-                    err = err + coins->vout[nOut].scriptPubKey.ToString() + "\nvs:\n" +
-                          scriptPubKey.ToString();
+                    err = err + ScriptToAsmStr(coins->vout[nOut].scriptPubKey) + "\nvs:\n"+
+                        ScriptToAsmStr(scriptPubKey);
                     throw std::runtime_error(err);
                 }
                 if ((unsigned int)nOut >= coins->vout.size())
@@ -496,7 +495,7 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command, const 
 static void OutputTxJSON(const CTransaction& tx)
 {
     UniValue entry(UniValue::VOBJ);
-    TxToUniv(tx, 0, entry);
+    TxToUniv(tx, UINT256_ZERO, entry);
 
     std::string jsonOutput = entry.write(4);
     fprintf(stdout, "%s\n", jsonOutput.c_str());

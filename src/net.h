@@ -260,9 +260,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(nVersion);
         READWRITE(nCreateTime);
         READWRITE(nBanUntil);
         READWRITE(banReason);
@@ -776,5 +775,14 @@ public:
 };
 
 void DumpBanlist();
+
+struct AddedNodeInfo {
+    std::string strAddedNode;
+    CService resolvedAddress;
+    bool fConnected;
+    bool fInbound;
+};
+
+std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
 #endif // BITCOIN_NET_H

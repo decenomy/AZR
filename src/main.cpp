@@ -99,7 +99,7 @@ size_t nCoinCacheUsage = 5000 * 300;
 /* If the tip is older than this (in seconds), the node is considered to be in initial block download. */
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
-/** Fees smaller than this (in upiv) are considered zero fee (for relaying and mining)
+/** Fees smaller than this (in uazr) are considered zero fee (for relaying and mining)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minRelayTxFee only 10 times higher
  * so it's still 10 times lower comparing to bitcoin.
  */
@@ -646,7 +646,7 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer)
     // have been mined or received.
     // 10,000 orphans, each of which is at most 5,000 bytes big is
     // at most 500 megabytes of orphans:
-    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    unsigned int sz = GetSerializeSize(tx, SER_NETWORK, CTransaction::CURRENT_VERSION);
     if (sz > 5000) {
         LogPrint(BCLog::MEMPOOL, "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
         return false;
@@ -742,7 +742,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
     // almost as much to process as they cost the sender in fees, because
     // computing signature hashes is O(ninputs*txsize). Limiting transactions
     // to MAX_STANDARD_TX_SIZE mitigates CPU exhaustion attacks.
-    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    unsigned int sz = GetSerializeSize(tx, SER_NETWORK, CTransaction::CURRENT_VERSION);
     unsigned int nMaxSize = tx.ContainsZerocoins() ? MAX_ZEROCOIN_TX_SIZE : MAX_STANDARD_TX_SIZE;
     if (sz >= nMaxSize) {
         reason = "tx-size";
@@ -1505,7 +1505,7 @@ bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos)
         return error("WriteBlockToDisk : OpenBlockFile failed");
 
     // Write index header
-    unsigned int nSize = fileout.GetSerializeSize(block);
+    unsigned int nSize = GetSerializeSize(fileout, block);
     fileout << FLATDATA(Params().MessageStart()) << nSize;
 
     // Write block
@@ -3725,7 +3725,7 @@ bool CheckWork(const CBlock block, CBlockIndex* const pindexPrev)
     }
 
     if (block.nBits != nBitsRequired) {
-        // Pivx Specific reference to the block with the wrong threshold was used.
+        // Aezora Specific reference to the block with the wrong threshold was used.
         const Consensus::Params& consensus = Params().GetConsensus();
         if ((block.nTime == (uint32_t) consensus.nAezoraBadBlockTime) &&
                 (block.nBits == (uint32_t) consensus.nAezoraBadBlockBits)) {
@@ -4319,7 +4319,7 @@ bool ProcessNewBlock(CValidationState& state, CNode* pfrom, CBlock* pblock, CDis
     }
 
     LogPrintf("%s : ACCEPTED Block %ld in %ld milliseconds with size=%d\n", __func__, GetHeight(), GetTimeMillis() - nStartTime,
-              pblock->GetSerializeSize(SER_DISK, CLIENT_VERSION));
+              GetSerializeSize(*pblock, SER_DISK, CLIENT_VERSION));
 
     return true;
 }
@@ -6081,13 +6081,13 @@ bool static ProcessMessage(CNode* pfrom, std::string strCommand, CDataStream& vR
 //       it was the one which was commented out
 int ActiveProtocol()
 {
-    // SPORK_14 was used for 70920 (v1.0), commented out now.
-//    if (sporkManager.IsSporkActive(SPORK_14_NEW_PROTOCOL_ENFORCEMENT))
-//            return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT;
-
-    // SPORK_15 is used for 70921 (v1.1+)
-    if (sporkManager.IsSporkActive(SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2))
+    // SPORK_14 was used for 70923 (v1.1.1), commented out now.
+    if (sporkManager.IsSporkActive(SPORK_14_NEW_PROTOCOL_ENFORCEMENT))
             return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT;
+
+    // SPORK_15 is used for 70922 (v1.1.0)
+//    if (sporkManager.IsSporkActive(SPORK_15_NEW_PROTOCOL_ENFORCEMENT_2))
+//            return MIN_PEER_PROTO_VERSION_AFTER_ENFORCEMENT;
 
     return MIN_PEER_PROTO_VERSION_BEFORE_ENFORCEMENT;
 }
@@ -6426,7 +6426,7 @@ bool CBlockUndo::WriteToDisk(CDiskBlockPos& pos, const uint256& hashBlock)
         return error("CBlockUndo::WriteToDisk : OpenUndoFile failed");
 
     // Write index header
-    unsigned int nSize = fileout.GetSerializeSize(*this);
+    unsigned int nSize = GetSerializeSize(fileout, *this);
     fileout << FLATDATA(Params().MessageStart()) << nSize;
 
     // Write undo data

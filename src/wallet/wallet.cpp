@@ -1680,7 +1680,7 @@ int CWallet::ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate, b
                     ret++;
             }
 
-            //If this is a zapwallettx, need to readd zpiv
+            //If this is a zapwallettx, need to readd zazr
             if (fCheckZAZR && pindex->nHeight >= Params().GetConsensus().height_start_ZC) {
                 std::list<CZerocoinMint> listMints;
                 BlockToZerocoinMintList(block, listMints, true);
@@ -2597,7 +2597,7 @@ bool CWallet::CreateCoinStake(
         return false;
     }
 
-    // Parse utxos into CPivStakes
+    // Parse utxos into CAzrStakes
     std::list<std::unique_ptr<CStakeInput> > listInputs;
     for (const COutput &out : vCoins) {
         std::unique_ptr<CAzrStake> input(new CAzrStake());
