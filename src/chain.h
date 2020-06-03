@@ -272,7 +272,7 @@ public:
 
 /** Used to marshal pointers into hashes for db storage. */
 
-// New serialization introduced with 4.0.99
+// New serialization introduced with 1.0.99
 static const int DBI_OLD_SER_VERSION = 1009900;
 static const int DBI_SER_VERSION_NO_ZC = 1009902;   // removes mapZerocoinSupply, nMoneySupply
 

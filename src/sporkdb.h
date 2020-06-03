@@ -5,7 +5,7 @@
 #ifndef AEZORA_CSPORKDB_H
 #define AEZORA_CSPORKDB_H
 
-#include <boost/filesystem/path.hpp>
+#include "fs.h"
 #include "dbwrapper.h"
 #include "spork.h"
 

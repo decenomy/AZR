@@ -244,6 +244,7 @@ extern const char* MNBROADCAST;
  * The mnping message is used to ensure a masternode is still active
  */
 extern const char* MNPING;
+extern const char* MNSPECIFICENTRY;
 /**
  * The mnwinner message is used to relay and distribute consensus for masternode
  * payout ordering

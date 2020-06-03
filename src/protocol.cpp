@@ -45,6 +45,7 @@ const char* SPORK = "spork";
 const char* GETSPORKS = "getsporks";
 const char* MNBROADCAST = "mnb";
 const char* MNPING = "mnp";
+const char* MNSPECIFICENTRY = "dseg";
 const char* MNWINNER = "mnw";
 const char* GETMNWINNERS = "mnget";
 const char* BUDGETPROPOSAL = "mprop";
@@ -66,6 +67,7 @@ static const char* ppszTypeName[] = {
     NetMsgType::GETSPORKS,
     NetMsgType::MNBROADCAST,
     NetMsgType::MNPING,
+    NetMsgType::MNSPECIFICENTRY,
     NetMsgType::MNWINNER,
     NetMsgType::GETMNWINNERS,
     NetMsgType::BUDGETPROPOSAL,
@@ -106,6 +108,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETSPORKS,
     NetMsgType::MNBROADCAST,
     NetMsgType::MNPING,
+    NetMsgType::MNSPECIFICENTRY,
     NetMsgType::MNWINNER,
     NetMsgType::GETMNWINNERS,
     NetMsgType::BUDGETPROPOSAL,

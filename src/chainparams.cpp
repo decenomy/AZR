@@ -71,7 +71,9 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     (90384, uint256S("309d8f656ff173abf8aeb04092bacd35eb69693e43d31530abfaf098a394bdd6"))
     (100330, uint256S("7afd2261cc8efdaf17844e0a5a125a789914836f790c19d898e2cfe1232a008a"))
     (181752, uint256S("3da55ef79f2c5166691074bddae58e5c6a2982ad0658577527f4ea8cdabe37e8"))
-    (206658, uint256S("68aab2ab67180adf11cb798b3573ff2bc5430ebd74d621edbb6fbbb15fd9a025"));
+    (206658, uint256S("68aab2ab67180adf11cb798b3573ff2bc5430ebd74d621edbb6fbbb15fd9a025"))
+    (206909, uint256S("e7eecf22044f71b2328a8596588725a5e8a361530b3c5dd190acba400d01d263"))
+    (210430, uint256S("1af22142eb19dc446e5821e86a1864707a2a314baafcaae286c825d9643338a9"));
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
     1577461410, // * UNIX timestamp of last checkpoint block
@@ -130,7 +132,7 @@ public:
         consensus.nTargetSpacing = 1 * 60;
         consensus.nTimeSlotLength = 15;
 
-
+        // spork keys
         consensus.strSporkPubKey = "04E9BC0227525E3C398B36566DB2361D09B1B63554B12D31BCD547CDAE74D9DCED042740772B7E2A81EDF4EB1CA709666DB0DA3093732E21A0F0D9E43B2C75D08D";
         consensus.strSporkPubKeyOld = "0447DAA62E208D6BF276F8FF192CBDAD9759461481284D3C43C0ED442A60607AB75C9820891FCDDE9A95B856B0F6F6BD1F05F814C63D219F4ECF9F18F70B8D0543";
         consensus.nTime_EnforceNewSporkKey = 1566860400;    //!> August 26, 2019 11:00:00 PM GMT
@@ -182,6 +184,7 @@ public:
         pchMessageStart[2] = 0x12;
         pchMessageStart[3] = 0x19;
         nDefaultPort = 14725;
+
         // Note that of those with the service bits flag, most only support a subset of possible options
         vSeeds.push_back(CDNSSeedData("188.166.18.32", "188.166.18.32"));
         vSeeds.push_back(CDNSSeedData("142.93.232.37", "142.93.232.37"));
