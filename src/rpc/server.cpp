@@ -365,7 +365,6 @@ static const CRPCCommand vRPCCommands[] =
         /* AEZORA features */
         {"aezora", "listmasternodes", &listmasternodes, true, true, false},
         {"aezora", "getmasternodecount", &getmasternodecount, true, true, false},
-        {"aezora", "masternodeconnect", &masternodeconnect, true, true, false},
         {"aezora", "createmasternodebroadcast", &createmasternodebroadcast, true, true, false},
         {"aezora", "decodemasternodebroadcast", &decodemasternodebroadcast, true, true, false},
         {"aezora", "relaymasternodebroadcast", &relaymasternodebroadcast, true, true, false},
