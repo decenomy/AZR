@@ -10,7 +10,6 @@
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
-#include "netbase.h"
 #include "sync.h"
 #include "util.h"
 #include "wallet/wallet.h"
@@ -365,18 +364,11 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
         return false;
     }
 
-    int nPort;
-    int nDefaultPort = Params().GetDefaultPort();
-    std::string strHost;
-    SplitHostPort(strService, nPort, strHost);
-    if (nPort == 0) nPort = nDefaultPort;
-    CService _service(LookupNumeric(strHost.c_str(), nPort));
-
     // The service needs the correct default port to work properly
-    if (!CheckDefaultPort(_service, strErrorRet, "CMasternodeBroadcast::Create"))
+    if(!CheckDefaultPort(strService, strErrorRet, "CMasternodeBroadcast::Create"))
         return false;
 
-    return Create(txin, _service, keyCollateralAddressNew, pubKeyCollateralAddressNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
+    return Create(txin, CService(strService), keyCollateralAddressNew, pubKeyCollateralAddressNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
 }
 
 bool CMasternodeBroadcast::Create(CTxIn txin, CService service, CKey keyCollateralAddressNew, CPubKey pubKeyCollateralAddressNew, CKey keyMasternodeNew, CPubKey pubKeyMasternodeNew, std::string& strErrorRet, CMasternodeBroadcast& mnbRet)
@@ -474,13 +466,14 @@ bool CMasternodeBroadcast::CheckSignature() const
     return true;
 }
 
-bool CMasternodeBroadcast::CheckDefaultPort(CService service, std::string& strErrorRet, const std::string& strContext)
+bool CMasternodeBroadcast::CheckDefaultPort(std::string strService, std::string& strErrorRet, std::string strContext)
 {
+    CService service = CService(strService);
     int nDefaultPort = Params().GetDefaultPort();
 
     if (service.GetPort() != nDefaultPort) {
         strErrorRet = strprintf("Invalid port %u for masternode %s, only %d is supported on %s-net.",
-            service.GetPort(), service.ToString(), nDefaultPort, Params().NetworkIDString());
+                                        service.GetPort(), strService, nDefaultPort, Params().NetworkIDString());
         LogPrint(BCLog::MASTERNODE, "%s - %s\n", strContext, strErrorRet);
         return false;
     }

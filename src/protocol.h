@@ -12,7 +12,7 @@
 #ifndef BITCOIN_PROTOCOL_H
 #define BITCOIN_PROTOCOL_H
 
-#include "netaddress.h"
+#include "netbase.h"
 #include "serialize.h"
 #include "uint256.h"
 #include "version.h"
@@ -244,6 +244,7 @@ extern const char* MNBROADCAST;
  * The mnping message is used to ensure a masternode is still active
  */
 extern const char* MNPING;
+extern const char* MNSPECIFICENTRY;
 /**
  * The mnwinner message is used to relay and distribute consensus for masternode
  * payout ordering
@@ -253,10 +254,6 @@ extern const char* MNWINNER;
  * The getmnwinners message is used to request winning masternode data from connected peers
  */
 extern const char* GETMNWINNERS;
-/**
-* The dseg message is used to request the Masternode list or an specific entry
-*/
-extern const char* GETMNLIST;
 /**
  * The budgetproposal message is used to broadcast or relay budget proposal metadata to connected peers
  */

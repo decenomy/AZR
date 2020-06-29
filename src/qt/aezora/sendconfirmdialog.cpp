@@ -128,10 +128,7 @@ void TxDetailDialog::setData(WalletModel *model, WalletModelTransaction &tx)
     ui->textAmount->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, totalAmount, false, BitcoinUnits::separatorAlways) + " (Fee included)");
     int nRecipients = tx.getRecipients().size();
     if (nRecipients == 1) {
-        const SendCoinsRecipient& recipient = tx.getRecipients().at(0);
-        if (recipient.isP2CS) {
-            ui->labelSend->setText(tr("Delegating to"));
-        }
+        SendCoinsRecipient recipient = tx.getRecipients().at(0);
         if (recipient.label.isEmpty()) { // If there is no label, then do not show the blank space.
             ui->textSendLabel->setText(recipient.address);
             ui->textSend->setVisible(false);

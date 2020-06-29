@@ -191,9 +191,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         // This vector will be sorted into a priority queue:
         std::vector<TxPriority> vecPriority;
         vecPriority.reserve(mempool.mapTx.size());
-        for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
+        for (std::map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi) {
-            const CTransaction& tx = mi->GetTx();
+            const CTransaction& tx = mi->second.GetTx();
             if (tx.IsCoinBase() || tx.IsCoinStake() || !IsFinalTx(tx, nHeight)){
                 continue;
             }
@@ -231,10 +231,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                     }
                     mapDependers[txin.prevout.hash].push_back(porphan);
                     porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx.find(txin.prevout.hash)->GetTx().vout[txin.prevout.n].nValue;
+                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
                     continue;
                 }
 
+                //Check for invalid/fraudulent inputs. They shouldn't make it through mempool, but check anyways.
+                if (invalid_out::ContainsOutPoint(txin.prevout)) {
+                    LogPrintf("%s : found invalid input %s in tx %s", __func__, txin.prevout.ToString(), tx.GetHash().ToString());
+                    fMissingInputs = true;
+                    break;
+                }
 
                 const CCoins* coins = view.AccessCoins(txin.prevout.hash);
                 assert(coins);
@@ -263,7 +269,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                 porphan->dPriority = dPriority;
                 porphan->feeRate = feeRate;
             } else
-                vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->GetTx()));
+                vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->second.GetTx()));
         }
 
         // Collect transactions into block
@@ -373,7 +379,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                 continue;
 
             CTxUndo txundo;
-            UpdateCoins(tx, view, txundo, nHeight);
+            UpdateCoins(tx, state, view, txundo, nHeight);
 
             // Added
             pblock->vtx.push_back(tx);

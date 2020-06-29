@@ -72,7 +72,6 @@ private Q_SLOTS:
     void clearAll();
     void onLabelClicked();
     void onMyStakingAddressesClicked();
-    void onOwnerAddressChanged();
     void onDelegationsRefreshed();
     void onSortChanged(int idx);
     void onSortOrderChanged(int idx);

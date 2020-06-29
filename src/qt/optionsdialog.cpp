@@ -305,11 +305,10 @@ void OptionsDialog::updateHideOrphans(bool fHide)
 void OptionsDialog::doProxyIpChecks(QValidatedLineEdit* pUiProxyIp, QLineEdit* pUiProxyPort)
 {
     const std::string strAddrProxy = pUiProxyIp->text().toStdString();
-    const int nProxyPort = pUiProxyPort->text().toInt();
-    CService addrProxy(LookupNumeric(strAddrProxy.c_str(), nProxyPort));
+    CService addrProxy;
 
     // Check for a valid IPv4 / IPv6 address
-    if (!(fProxyIpValid = addrProxy.IsValid())) {
+    if (!(fProxyIpValid = LookupNumeric(strAddrProxy.c_str(), addrProxy))) {
         disableOkButton();
         pUiProxyIp->setValid(false);
         ui->statusLabel->setStyleSheet("QLabel { color: red; }");
@@ -317,7 +316,7 @@ void OptionsDialog::doProxyIpChecks(QValidatedLineEdit* pUiProxyIp, QLineEdit* p
         return;
     }
     // Check proxy port
-    if (!pUiProxyPort->hasAcceptableInput()) {
+    if (!pUiProxyPort->hasAcceptableInput()){
         disableOkButton();
         ui->statusLabel->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel->setText(tr("The supplied proxy port is invalid."));

@@ -493,7 +493,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         CTxDestination address1;
         ExtractDestination(winner.payee, address1);
 
-        LogPrint(BCLog::MASTERNODE, "mnw - winning vote - Addr %s Height %d bestHeight %d - %s\n", EncodeDestination(address1), winner.nBlockHeight, nHeight, winner.vinMasternode.prevout.ToStringShort());
+        //   LogPrint(BCLog::MASTERNODE, "mnw - winning vote - Addr %s Height %d bestHeight %d - %s\n", address2.ToString().c_str(), winner.nBlockHeight, nHeight, winner.vinMasternode.prevout.ToStringShort());
 
         if (masternodePayments.AddWinningMasternode(winner)) {
             winner.Relay();
@@ -547,12 +547,6 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
     uint256 blockHash;
     if (!GetBlockHash(blockHash, winnerIn.nBlockHeight - 100)) {
         return false;
-    }
-
-    CMasternode* pmn = mnodeman.Find(winnerIn.vinMasternode);
-    if (!pmn->IsEnabled())
-    {
-        if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) return false;
     }
 
     {

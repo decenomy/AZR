@@ -7,17 +7,18 @@
 #include "db.h"
 #include "init.h"
 #include "main.h"
+#include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
-#include "netbase.h"
 #include "rpc/server.h"
 #include "utilmoneystr.h"
 
 #include <univalue.h>
 
 #include <boost/tokenizer.hpp>
+#include <fstream>
 
 UniValue listmasternodes(const UniValue& params, bool fHelp)
 {
@@ -79,8 +80,7 @@ UniValue listmasternodes(const UniValue& params, bool fHelp)
             std::string strHost;
             int port;
             SplitHostPort(mn->addr.ToString(), port, strHost);
-            CNetAddr node;
-            LookupHost(strHost.c_str(), node, false);
+            CNetAddr node = CNetAddr(strHost);
             std::string strNetwork = GetNetworkName(node.GetNetwork());
 
             obj.push_back(Pair("rank", (strStatus == "ENABLED" ? s.first : 0)));
@@ -90,7 +90,6 @@ UniValue listmasternodes(const UniValue& params, bool fHelp)
             obj.push_back(Pair("pubkey", HexStr(mn->pubKeyMasternode)));
             obj.push_back(Pair("status", strStatus));
             obj.push_back(Pair("addr", EncodeDestination(mn->pubKeyCollateralAddress.GetID())));
-			obj.push_back(Pair("addr_ip", mn->addr.ToString()));
             obj.push_back(Pair("version", mn->protocolVersion));
             obj.push_back(Pair("lastseen", (int64_t)mn->lastPing.sigTime));
             obj.push_back(Pair("activetime", (int64_t)(mn->lastPing.sigTime - mn->sigTime)));
@@ -101,6 +100,32 @@ UniValue listmasternodes(const UniValue& params, bool fHelp)
     }
 
     return ret;
+}
+
+UniValue masternodeconnect(const UniValue& params, bool fHelp)
+{
+    if (fHelp || (params.size() != 1))
+        throw std::runtime_error(
+            "masternodeconnect \"address\"\n"
+            "\nAttempts to connect to specified masternode address\n"
+
+            "\nArguments:\n"
+            "1. \"address\"     (string, required) IP or net address to connect to\n"
+
+            "\nExamples:\n" +
+            HelpExampleCli("masternodeconnect", "\"192.168.0.6:14725\"") + HelpExampleRpc("masternodeconnect", "\"192.168.0.6:14725\""));
+
+    std::string strAddress = params[0].get_str();
+
+    CService addr = CService(strAddress);
+
+    CNode* pnode = ConnectNode(CAddress(addr, NODE_NETWORK), NULL, true);
+    if (pnode) {
+        pnode->Release();
+        return NullUniValue;
+    } else {
+        throw std::runtime_error("error connecting\n");
+    }
 }
 
 UniValue getmasternodecount (const UniValue& params, bool fHelp)

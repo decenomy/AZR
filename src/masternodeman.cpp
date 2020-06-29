@@ -11,7 +11,6 @@
 #include "masternode-sync.h"
 #include "masternode.h"
 #include "messagesigner.h"
-#include "netbase.h"
 #include "spork.h"
 #include "swifttx.h"
 #include "util.h"
@@ -232,7 +231,7 @@ void CMasternodeMan::AskForMN(CNode* pnode, CTxIn& vin)
     // ask for the mnb info once from the node that sent mnp
 
     LogPrint(BCLog::MASTERNODE, "CMasternodeMan::AskForMN - Asking node for missing entry, vin: %s\n", vin.prevout.hash.ToString());
-    pnode->PushMessage(NetMsgType::GETMNLIST, vin);
+    pnode->PushMessage(NetMsgType::MNSPECIFICENTRY, vin);
     int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
     mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
 }
@@ -404,8 +403,7 @@ void CMasternodeMan::CountNetworks(int protocolVersion, int& ipv4, int& ipv6, in
         std::string strHost;
         int port;
         SplitHostPort(mn.addr.ToString(), port, strHost);
-        CNetAddr node;
-        LookupHost(strHost.c_str(), node, false);
+        CNetAddr node = CNetAddr(strHost);
         int nNetwork = node.GetNetwork();
         switch (nNetwork) {
             case 1 :
@@ -437,7 +435,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
         }
     }
 
-    pnode->PushMessage(NetMsgType::GETMNLIST, CTxIn());
+    pnode->PushMessage(NetMsgType::MNSPECIFICENTRY, CTxIn());
     int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
     mWeAskedForMasternodeList[pnode->addr] = askAgain;
 }
@@ -787,7 +785,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         // we might have to ask for a masternode entry once
         AskForMN(pfrom, mnp.vin);
 
-    } else if (strCommand == NetMsgType::GETMNLIST) { //Get Masternode list or specific entry
+    } else if (strCommand == NetMsgType::MNSPECIFICENTRY) { //Get Masternode list or specific entry
 
         CTxIn vin;
         vRecv >> vin;

@@ -26,61 +26,82 @@ SettingsFaqWidget::SettingsFaqWidget(AEZORAGUI *parent) :
 
     // Content
     setCssProperty({
-           ui->labelNumber_Intro,
-           ui->labelNumber_UnspendableAZR,
-           ui->labelNumber_Stake,
-           ui->labelNumber_Support,
-           ui->labelNumber_Masternode,
-           ui->labelNumber_MNController
+           ui->labelNumber1,
+           ui->labelNumber2,
+           ui->labelNumber3,
+           ui->labelNumber4,
+           ui->labelNumber5,
+           ui->labelNumber6,
+           ui->labelNumber7,
+           ui->labelNumber8,
+           ui->labelNumber9,
+           ui->labelNumber10
         }, "container-number-faq");
 
     setCssProperty({
-              ui->labelSubtitle_Intro,
-              ui->labelSubtitle_UnspendableAZR,
-              ui->labelSubtitle_Stake,
-              ui->labelSubtitle_Support,
-              ui->labelSubtitle_Masternode,
-              ui->labelSubtitle_MNController
+              ui->labelSubtitle1,
+              ui->labelSubtitle2,
+              ui->labelSubtitle3,
+              ui->labelSubtitle4,
+              ui->labelSubtitle5,
+              ui->labelSubtitle6,
+              ui->labelSubtitle7,
+              ui->labelSubtitle8,
+              ui->labelSubtitle9,
+              ui->labelSubtitle10
             }, "text-subtitle-faq");
 
 
     setCssProperty({
-              ui->labelContent_Intro,
-              ui->labelContent_UnspendableAZR,
-              ui->labelContent_Stake,
-              ui->labelContent_Support,
-              ui->labelContent_Masternode,
-              ui->labelContent_MNController
+              ui->labelContent1,
+              ui->labelContent2,
+              ui->labelContent3,
+              ui->labelContent4,
+              ui->labelContent5,
+              ui->labelContent6,
+              ui->labelContent7,
+              ui->labelContent8,
+              ui->labelContent9,
+              ui->labelContent10
             }, "text-content-faq");
 
 
     setCssProperty({
-              ui->pushButton_Intro,
-              ui->pushButton_UnspendableAZR,
-              ui->pushButton_Stake,
-              ui->pushButton_Support,
-              ui->pushButton_Masternode,
-              ui->pushButton_MNController
+              ui->pushButtonFaq1,
+              ui->pushButtonFaq2,
+              ui->pushButtonFaq3,
+              ui->pushButtonFaq4,
+              ui->pushButtonFaq5,
+              ui->pushButtonFaq6,
+              ui->pushButtonFaq7,
+              ui->pushButtonFaq8,
+              ui->pushButtonFaq9,
+              ui->pushButtonFaq10
             }, "btn-faq-options");
 
-    ui->labelContent_Support->setOpenExternalLinks(true);
+    ui->labelContent3->setOpenExternalLinks(true);
+    ui->labelContent5->setOpenExternalLinks(true);
+    ui->labelContent8->setOpenExternalLinks(true);
 
     // Exit button
     setCssProperty(ui->pushButtonExit, "btn-faq-exit");
 
     // Web Link
     setCssProperty(ui->pushButtonWebLink, "btn-faq-web");
-    ui->pushButtonWebLink->setVisible(false);
     setCssProperty(ui->containerButtons, "container-faq-buttons");
 
     // Buttons
     connect(ui->pushButtonExit, &QPushButton::clicked, this, &SettingsFaqWidget::close);
-    connect(ui->pushButton_Intro, &QPushButton::clicked, [this](){onFaqClicked(ui->widget_Intro);});
-    connect(ui->pushButton_UnspendableAZR, &QPushButton::clicked, [this](){onFaqClicked(ui->widget_UnspendableAZR);});
-    connect(ui->pushButton_Stake, &QPushButton::clicked, [this](){onFaqClicked(ui->widget_Stake);});
-    connect(ui->pushButton_Support, &QPushButton::clicked, [this](){onFaqClicked(ui->widget_Support);});
-    connect(ui->pushButton_Masternode, &QPushButton::clicked, [this](){onFaqClicked(ui->widget_Masternode);});
-    connect(ui->pushButton_MNController, &QPushButton::clicked, [this](){onFaqClicked(ui->widget_MNController);});
+    connect(ui->pushButtonFaq1, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq1Clicked);
+    connect(ui->pushButtonFaq2, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq2Clicked);
+    connect(ui->pushButtonFaq3, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq3Clicked);
+    connect(ui->pushButtonFaq4, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq4Clicked);
+    connect(ui->pushButtonFaq5, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq5Clicked);
+    connect(ui->pushButtonFaq6, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq6Clicked);
+    connect(ui->pushButtonFaq7, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq7Clicked);
+    connect(ui->pushButtonFaq8, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq8Clicked);
+    connect(ui->pushButtonFaq9, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq9Clicked);
+    connect(ui->pushButtonFaq10, &QPushButton::clicked, this, &SettingsFaqWidget::onFaq10Clicked);
 
     if (parent)
         connect(parent, &AEZORAGUI::windowResizeEvent, this, &SettingsFaqWidget::windowResizeEvent);
@@ -102,9 +123,54 @@ void SettingsFaqWidget::setSection(int num)
     pos = num;
 }
 
-void SettingsFaqWidget::onFaqClicked(const QWidget* const widget)
+void SettingsFaqWidget::onFaq1Clicked()
 {
-    ui->scrollAreaFaq->verticalScrollBar()->setValue(widget->y());
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq1->y());
+}
+
+void SettingsFaqWidget::onFaq2Clicked()
+{
+   ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq2->y());
+}
+
+void SettingsFaqWidget::onFaq3Clicked()
+{
+   ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq3->y());
+}
+
+void SettingsFaqWidget::onFaq4Clicked()
+{
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq4->y());
+}
+
+void SettingsFaqWidget::onFaq5Clicked()
+{
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq5->y());
+}
+
+void SettingsFaqWidget::onFaq6Clicked()
+{
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq6->y());
+}
+
+void SettingsFaqWidget::onFaq7Clicked()
+{
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq7->y());
+}
+
+void SettingsFaqWidget::onFaq8Clicked()
+{
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq8->y());
+}
+
+void SettingsFaqWidget::onFaq9Clicked()
+{
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq9->y());
+}
+
+void SettingsFaqWidget::onFaq10Clicked()
+{
+    ui->scrollAreaFaq->verticalScrollBar()->setValue(ui->widgetFaq10->y());
 }
 
 void SettingsFaqWidget::windowResizeEvent(QResizeEvent* event)
@@ -117,12 +183,16 @@ void SettingsFaqWidget::windowResizeEvent(QResizeEvent* event)
 std::vector<QPushButton*> SettingsFaqWidget::getButtons()
 {
     return {
-            ui->pushButton_Intro,
-            ui->pushButton_UnspendableAZR,
-            ui->pushButton_Stake,
-            ui->pushButton_Support,
-            ui->pushButton_Masternode,
-            ui->pushButton_MNController
+            ui->pushButtonFaq1,
+            ui->pushButtonFaq2,
+            ui->pushButtonFaq3,
+            ui->pushButtonFaq4,
+            ui->pushButtonFaq5,
+            ui->pushButtonFaq6,
+            ui->pushButtonFaq7,
+            ui->pushButtonFaq8,
+            ui->pushButtonFaq9,
+            ui->pushButtonFaq10
     };
 }
 
