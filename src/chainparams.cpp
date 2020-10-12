@@ -187,12 +187,14 @@ public:
         nDefaultPort = 14725;
 
         // Note that of those with the service bits flag, most only support a subset of possible options
-        vSeeds.push_back(CDNSSeedData("188.166.18.32", "188.166.18.32"));
-        vSeeds.push_back(CDNSSeedData("142.93.232.37", "142.93.232.37"));
-        vSeeds.push_back(CDNSSeedData("104.248.91.136", "104.248.91.136"));
-        vSeeds.push_back(CDNSSeedData("134.209.83.31", "134.209.83.31"));
-        vSeeds.push_back(CDNSSeedData("188.166.13.97", "188.166.13.97"));
-        vSeeds.push_back(CDNSSeedData("134.209.201.195", "134.209.201.195"));
+        vSeeds.push_back(CDNSSeedData("seed1.aezora.com", "seed1.aezora.com"));
+        vSeeds.push_back(CDNSSeedData("seed2.aezora.com", "seed2.aezora.com"));
+        vSeeds.push_back(CDNSSeedData("seed3.aezora.com", "seed3.aezora.com"));
+        vSeeds.push_back(CDNSSeedData("seed4.aezora.com", "seed4.aezora.com"));
+        vSeeds.push_back(CDNSSeedData("seed5.aezora.com", "seed5.aezora.com"));
+        vSeeds.push_back(CDNSSeedData("seed6.aezora.com", "seed6.aezora.com"));
+        vSeeds.push_back(CDNSSeedData("seed7.aezora.com", "seed7.aezora.com"));
+        vSeeds.push_back(CDNSSeedData("seed8.aezora.com", "seed8.aezora.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 23);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 24);
