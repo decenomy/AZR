@@ -135,10 +135,10 @@ public:
         consensus.nTimeSlotLength = 15;
 
         // spork keys
-        consensus.strSporkPubKey = "04E9BC0227525E3C398B36566DB2361D09B1B63554B12D31BCD547CDAE74D9DCED042740772B7E2A81EDF4EB1CA709666DB0DA3093732E21A0F0D9E43B2C75D08D";
-        consensus.strSporkPubKeyOld = "0447DAA62E208D6BF276F8FF192CBDAD9759461481284D3C43C0ED442A60607AB75C9820891FCDDE9A95B856B0F6F6BD1F05F814C63D219F4ECF9F18F70B8D0543";
-        consensus.nTime_EnforceNewSporkKey = 1566860400;    //!> August 26, 2019 11:00:00 PM GMT
-        consensus.nTime_RejectOldSporkKey = 1569538800;     //!> September 26, 2019 11:00:00 PM GMT
+        consensus.strSporkPubKey    = "023a979aefef58890e1cae7934c5bed09a8dc8f70da29d884d84bf083eaac6d566";
+        consensus.strSporkPubKeyOld = "04E9BC0227525E3C398B36566DB2361D09B1B63554B12D31BCD547CDAE74D9DCED042740772B7E2A81EDF4EB1CA709666DB0DA3093732E21A0F0D9E43B2C75D08D";
+        consensus.nTime_EnforceNewSporkKey  = 1605006000;    // 11/10/2020 @ 11:00am (UTC)
+        consensus.nTime_RejectOldSporkKey   = 1605006000;    // 11/10/2020 @ 11:00am (UTC)
 
         // height-based activations
         consensus.height_last_PoW = 250;
