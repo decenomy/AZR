@@ -1656,8 +1656,20 @@ int64_t GetBlockValue(int nHeight)
         nSubsidy = 140 * COIN;
     } else if (nHeight <= 400000 && nHeight >= 350000) {
         nSubsidy = 130 * COIN;
-    } else if (nHeight <= 500000 && nHeight >= 400000) {
+    } else if (nHeight <= 450000 && nHeight >= 400000) {
         nSubsidy = 120 * COIN;
+    } else if (nHeight <= 500000 && nHeight >= 450000) {
+        nSubsidy = 140 * COIN;
+    } else if (nHeight <= 550000 && nHeight >= 500000) {
+        nSubsidy = 150 * COIN;
+    } else if (nHeight <= 600000 && nHeight >= 550000) {
+        nSubsidy = 140 * COIN;
+    } else if (nHeight <= 650000 && nHeight >= 600000) {
+        nSubsidy = 130 * COIN;
+    } else if (nHeight <= 700000 && nHeight >= 650000) {
+        nSubsidy = 120 * COIN;
+    } else if (nHeight <= 750000 && nHeight >= 700000) {
+        nSubsidy = 110 * COIN;
     } else {
         nSubsidy = 100 * COIN;
     }
@@ -1667,11 +1679,16 @@ int64_t GetBlockValue(int nHeight)
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
 {
     const int last_pow_block = Params().GetConsensus().height_last_PoW;
-    int64_t ret = 0;
-    if (nHeight >= last_pow_block) {
+
+    if(nHeight < last_pow_block) {
+        return 0;
+    } else if (nHeight <= 450000) {
         return blockValue * 9 / 10;
+    } else if (nHeight > 450000) {
+        return blockValue - (10 * COIN);
     }
-    return ret;
+
+    return 0;
 }
 
 bool IsInitialBlockDownload()

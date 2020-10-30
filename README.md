@@ -56,6 +56,12 @@ More information at [aezora.com](http://www.aezora.com)
 <tr><td>Phase 15</td><td>100,000 AZR</td><td>250,001-300,000</td><td>150 AZR</td><td>90% (135 AZR)</td><td>10% (15 AZR)</td></tr>
 <tr><td>Phase 16</td><td>150,000 AZR</td><td>300,001-350,000</td><td>140 AZR</td><td>90% (126 AZR)</td><td>10% (14 AZR)</td></tr>
 <tr><td>Phase 17</td><td>200,000 AZR</td><td>350,001-400,000</td><td>130 AZR</td><td>90% (117 AZR)</td><td>10% (13 AZR)</td></tr>
-<tr><td>Phase 18</td><td>250,000 AZR</td><td>400,001-500,000</td><td>120 AZR</td><td>90% (108 AZR)</td><td>10% (12 AZR)</td></tr>
-<tr><td>Phase 19</td><td>300,000 AZR</td><td>500,001-∞</td><td>100 AZR</td><td>90% (90 AZR)</td><td>10% (10 AZR)</td></tr>
+<tr><td>Phase 18</td><td>250,000 AZR</td><td>400,001-450,000</td><td>120 AZR</td><td>90% (108 AZR)</td><td>10% (12 AZR)</td></tr>
+<tr><td>Phase 19</td><td>250,000 AZR</td><td>450,001-500,000</td><td>140 AZR</td><td>130 AZR</td><td>10 AZR</td></tr>
+<tr><td>Phase 20</td><td>300,000 AZR</td><td>500,001-550,000</td><td>150 AZR</td><td>140 AZR</td><td>10 AZR</td></tr>
+<tr><td>Phase 21</td><td>300,000 AZR</td><td>550,001-600,000</td><td>140 AZR</td><td>130 AZR</td><td>10 AZR</td></tr>
+<tr><td>Phase 22</td><td>300,000 AZR</td><td>600,001-650,000</td><td>130 AZR</td><td>120 AZR</td><td>10 AZR</td></tr>
+<tr><td>Phase 23</td><td>300,000 AZR</td><td>650,001-700,000</td><td>120 AZR</td><td>110 AZR</td><td>10 AZR</td></tr>
+<tr><td>Phase 24</td><td>300,000 AZR</td><td>700,001-750,000</td><td>110 AZR</td><td>100 AZR</td><td>10 AZR</td></tr>
+<tr><td>Phase 25</td><td>300,000 AZR</td><td>750,001-</td><td>100 AZR</td><td>90 AZR</td><td>10 AZR</td></tr>
 </table>
