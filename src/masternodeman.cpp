@@ -505,7 +505,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if (masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
-        if (fFilterSigTime && mn.sigTime + (nMnCount * 2.6 * 60) > GetAdjustedTime()) continue;
+        if (fFilterSigTime && mn.sigTime + (nMnCount * (nBlockHeight > 450000 ? 1.0 : 2.6) * 60) > GetAdjustedTime()) continue;
 
         //make sure it has as many confirmations as there are masternodes
         if (mn.GetMasternodeInputAge() < nMnCount) continue;
