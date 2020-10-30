@@ -91,14 +91,14 @@
        <widget class="QToolButton" name="imgLogo">
         <property name="minimumSize">
          <size>
-          <width>300</width>
-          <height>100</height>
+          <width>400</width>
+          <height>400</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>300</width>
-          <height>100</height>
+          <width>400</width>
+          <height>400</height>
          </size>
         </property>
         <property name="text">

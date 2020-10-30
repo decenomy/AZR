@@ -22,6 +22,22 @@
         <file alias="splash_testnet">res/images/splash_testnet.png</file>
         <file alias="splash_regtest">res/images/splash_regtest.png</file>
     </qresource>
+    <qresource prefix="/font">
+        <file alias="Nunito-Black.ttf">aezora/res/font/Nunito-Black.ttf</file>
+        <file alias="Nunito-BlackItalic.ttf">aezora/res/font/Nunito-BlackItalic.ttf</file>
+        <file alias="Nunito-Bold.ttf">aezora/res/font/Nunito-Bold.ttf</file>
+        <file alias="Nunito-BoldItalic.ttf">aezora/res/font/Nunito-BoldItalic.ttf</file>
+        <file alias="Nunito-ExtraBold.ttf">aezora/res/font/Nunito-ExtraBold.ttf</file>
+        <file alias="Nunito-ExtraBoldItalic.ttf">aezora/res/font/Nunito-ExtraBoldItalic.ttf</file>
+        <file alias="Nunito-ExtraLight.ttf">aezora/res/font/Nunito-ExtraLight.ttf</file>
+        <file alias="Nunito-ExtraLightItalic.ttf">aezora/res/font/Nunito-ExtraLightItalic.ttf</file>
+        <file alias="Nunito-Italic.ttf">aezora/res/font/Nunito-Italic.ttf</file>
+        <file alias="Nunito-Light.ttf">aezora/res/font/Nunito-Light.ttf</file>
+        <file alias="Nunito-LightItalic.ttf">aezora/res/font/Nunito-LightItalic.ttf</file>
+        <file alias="Nunito-Regular.ttf">aezora/res/font/Nunito-Regular.ttf</file>
+        <file alias="Nunito-SemiBold.ttf">aezora/res/font/Nunito-SemiBold.ttf</file>
+        <file alias="Nunito-SemiBoldItalic.ttf">aezora/res/font/Nunito-SemiBoldItalic.ttf</file>
+    </qresource>
     <qresource prefix="/">
         <file alias="bg-splash">aezora/res/img/bg-splash.svg</file>
         <file alias="bg-splash-png">aezora/res/img/bg-splash.png</file>

@@ -2,6 +2,10 @@
 HH       CONTAINER
 HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
+* {
+    font-family: Nunito;
+}
+
 *[cssClass="container"] {
     background-color:#0b121f;
 }
@@ -62,7 +66,7 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
 QPushButton[cssClass="img-nav-logo"] {
     qproperty-icon: url("://img-nav-logo");
-    qproperty-iconSize: 49px 60px;
+    qproperty-iconSize: 80px 80px;
 }
 
 *[cssClass="btn-nav-receive"] {
@@ -1716,7 +1720,7 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 
 *[cssClass="img-splash-logo"] {
     qproperty-icon: url("://img-logo-aezora");
-    qproperty-iconSize: 300px 100px;
+    qproperty-iconSize: 400px 400px;
     border:0;
     background-color:transparent;
 }
@@ -2063,8 +2067,8 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 *[cssClass="label-address-box"] {
     color:#FFFFFF;
     background-color: #266b3dca;
-    font-size:22px;
-    padding:10px 10px;
+    font-size:18px;
+    padding:8px 8px;
 }
 
 
