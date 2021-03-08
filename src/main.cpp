@@ -1624,51 +1624,51 @@ int64_t GetBlockValue(int nHeight)
         nSubsidy = 1 * COIN;
     } else if (nHeight <= 5000 && nHeight > last_pow_block) {
         nSubsidy = 2 * COIN;
-    } else if (nHeight <= 15000 && nHeight >= 5000) {
+    } else if (nHeight <= 15000 && nHeight > 5000) {
         nSubsidy = 2.5 * COIN;
-    } else if (nHeight <= 25000 && nHeight >= 15000) {
+    } else if (nHeight <= 25000 && nHeight > 15000) {
         nSubsidy = 3 * COIN;
-    } else if (nHeight <= 35000 && nHeight >= 25000) {
+    } else if (nHeight <= 35000 && nHeight > 25000) {
         nSubsidy = 5 * COIN;
-    } else if (nHeight <= 55000 && nHeight >= 35000) {
+    } else if (nHeight <= 55000 && nHeight > 35000) {
         nSubsidy = 7 * COIN;
-    } else if (nHeight <= 100000 && nHeight >= 55000) {
+    } else if (nHeight <= 100000 && nHeight > 55000) {
         nSubsidy = 10 * COIN;
-    } else if (nHeight <= 110000 && nHeight >= 100000) {
+    } else if (nHeight <= 110000 && nHeight > 100000) {
         nSubsidy = 45 * COIN;
-    } else if (nHeight <= 120000 && nHeight >= 110000) {
+    } else if (nHeight <= 120000 && nHeight > 110000) {
         nSubsidy = 60 * COIN;
-    } else if (nHeight <= 130000 && nHeight >= 120000) {
+    } else if (nHeight <= 130000 && nHeight > 120000) {
         nSubsidy = 75 * COIN;
-    } else if (nHeight <= 140000 && nHeight >= 130000) {
+    } else if (nHeight <= 140000 && nHeight > 130000) {
         nSubsidy = 90 * COIN;
-    } else if (nHeight <= 160000 && nHeight >= 140000) {
+    } else if (nHeight <= 160000 && nHeight > 140000) {
         nSubsidy = 105 * COIN;
-    } else if (nHeight <= 180000 && nHeight >= 160000) {
+    } else if (nHeight <= 180000 && nHeight > 160000) {
         nSubsidy = 120 * COIN;
-    } else if (nHeight <= 200000 && nHeight >= 180000) {
+    } else if (nHeight <= 200000 && nHeight > 180000) {
         nSubsidy = 135 * COIN;
-    } else if (nHeight <= 250000 && nHeight >= 200000) {
+    } else if (nHeight <= 250000 && nHeight > 200000) {
         nSubsidy = 150 * COIN;
-    } else if (nHeight <= 300000 && nHeight >= 250000) {
+    } else if (nHeight <= 300000 && nHeight > 250000) {
         nSubsidy = 150 * COIN;
-    } else if (nHeight <= 350000 && nHeight >= 300000) {
+    } else if (nHeight <= 350000 && nHeight > 300000) {
         nSubsidy = 140 * COIN;
-    } else if (nHeight <= 400000 && nHeight >= 350000) {
+    } else if (nHeight <= 400000 && nHeight > 350000) {
         nSubsidy = 130 * COIN;
-    } else if (nHeight <= 450000 && nHeight >= 400000) {
+    } else if (nHeight <= 450000 && nHeight > 400000) {
         nSubsidy = 120 * COIN;
-    } else if (nHeight <= 500000 && nHeight >= 450000) {
+    } else if (nHeight <= 500000 && nHeight > 450000) {
         nSubsidy = 140 * COIN;
-    } else if (nHeight <= 550000 && nHeight >= 500000) {
+    } else if (nHeight <= 550000 && nHeight > 500000) {
         nSubsidy = 150 * COIN;
-    } else if (nHeight <= 600000 && nHeight >= 550000) {
+    } else if (nHeight <= 600000 && nHeight > 550000) {
         nSubsidy = 140 * COIN;
-    } else if (nHeight <= 650000 && nHeight >= 600000) {
+    } else if (nHeight <= 650000 && nHeight > 600000) {
         nSubsidy = 130 * COIN;
-    } else if (nHeight <= 700000 && nHeight >= 650000) {
+    } else if (nHeight <= 700000 && nHeight > 650000) {
         nSubsidy = 120 * COIN;
-    } else if (nHeight <= 750000 && nHeight >= 700000) {
+    } else if (nHeight <= 750000 && nHeight > 700000) {
         nSubsidy = 110 * COIN;
     } else {
         nSubsidy = 100 * COIN;
@@ -3564,7 +3564,7 @@ bool CheckColdStakeFreeOutput(const CTransaction& tx, const int nHeight)
             CTransaction txPrev; uint256 hashBlock;
             if (!GetTransaction(tx.vin[0].prevout.hash, txPrev, hashBlock, true))
                 return error("%s : read txPrev failed: %s",  __func__, tx.vin[0].prevout.hash.GetHex());
-            CAmount amtIn = txPrev.vout[tx.vin[0].prevout.n].nValue + GetBlockValue(nHeight - 1);
+            CAmount amtIn = txPrev.vout[tx.vin[0].prevout.n].nValue + GetBlockValue(nHeight);
             CAmount amtOut = 0;
             for (unsigned int i = 1; i < outs-1; i++) amtOut += tx.vout[i].nValue;
             if (amtOut != amtIn)
