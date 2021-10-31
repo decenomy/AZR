@@ -1,4 +1,4 @@
-Azzure wallet repository
+Azzure wallet repository 
 =====================================
 
 ### Coin Specs
