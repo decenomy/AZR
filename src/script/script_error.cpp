@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2018-2020 The PIVX developers
-// Copyright (c) 2021 The DECENOMY Core Developers
+// Copyright (c) 2021-2022 The DECENOMY Core Developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -21,6 +21,8 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Script failed an OP_EQUALVERIFY operation";
         case SCRIPT_ERR_CHECKMULTISIGVERIFY:
             return "Script failed an OP_CHECKMULTISIGVERIFY operation";
+        case SCRIPT_ERR_CHECKCOLDSTAKEVERIFY_LEGACY:
+            return "Script failed an OP_CHECKCOLDSTAKEVERIFY_LEGACY operation";
         case SCRIPT_ERR_CHECKSIGVERIFY:
             return "Script failed an OP_CHECKSIGVERIFY operation";
         case SCRIPT_ERR_NUMEQUALVERIFY:

@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2017 The Bitcoin Core developers
-// Copyright (c) 2021 The DECENOMY Core Developers
+// Copyright (c) 2021-2022 The DECENOMY Core Developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,6 +57,12 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
 
 bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fRejectBadUTXO, CValidationState& state, bool fFakeSerialAttack)
 {
+    const Consensus::Params& consensus = Params().GetConsensus();
+
+    if(tx.IsCoinStake() && tx.HasP2CSOutputs() && consensus.NetworkUpgradeActive(chainActive.Height(), Consensus::UPGRADE_MASTERNODE_RANK_V2)) {
+        return state.DoS(100, false, REJECT_INVALID, "disabled-cold-staking-legacy");
+    }
+
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vin-empty");
@@ -70,7 +76,6 @@ bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fReject
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
-    const Consensus::Params& consensus = Params().GetConsensus();
     CAmount nValueOut = 0;
     for (const CTxOut& txout : tx.vout) {
         if (txout.IsEmpty() && !tx.IsCoinBase() && !tx.IsCoinStake())
