@@ -11,6 +11,7 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "netmessagemaker.h"
+#include "rewards.h"
 #include "spork.h"
 #include "sync.h"
 #include "util.h"
@@ -20,9 +21,6 @@
 
 /** Object for who's going to get paid on which blocks */
 CMasternodePayments masternodePayments;
-
-uint64_t reconsiderWindowMin    = 0;
-uint64_t reconsiderWindowTime   = 0;
 
 RecursiveMutex cs_vecPayments;
 RecursiveMutex cs_mapMasternodeBlocks;
@@ -255,36 +253,21 @@ bool IsBlockPayeeValid(const CBlock& block, int nBlockHeight)
     const bool isPoSActive = consensus.NetworkUpgradeActive(nBlockHeight, Consensus::UPGRADE_POS);
     const CTransaction& txNew = (isPoSActive ? block.vtx[1] : block.vtx[0]);
 
-    // if it's the AZZR coin supply mint block then verify if exists an output with the right amount and address
-    if (consensus.nAZZRCoinSupplyMintHeight == nBlockHeight) {
-        LogPrint(BCLog::MASTERNODE, "masternode", "IsBlockPayeeValid: Check AZZR coin supply mint reward\n");
-        
-        CAmount amount = CMasternode::GetBlockValue(nBlockHeight) - CMasternode::GetBlockValue(nBlockHeight + 1);
-        CScript payee = GetScriptForDestination(DecodeDestination(consensus.sAZZRCoinSupplyMintAddress));
-
-        LogPrint(BCLog::MASTERNODE, "IsBlockPayeeValid, expected AZZR coin supply mint amount is %lld, coins %f\n", amount, (float)amount / COIN);
-
-        bool fAZZRCoinSupplyMintFound = false;
-        for(CTxOut out : txNew.vout) {
-            if (payee == out.scriptPubKey && amount == out.nValue) {
-                fAZZRCoinSupplyMintFound = true;
-            }
-        }
-
-        if(!fAZZRCoinSupplyMintFound) return false;
-    } 
-
     //check for masternode payee
     if (masternodePayments.IsTransactionValid(txNew, nBlockHeight))
         return true;
+
     LogPrint(BCLog::MASTERNODE,"Invalid mn payment detected %s\n", txNew.ToString().c_str());
 
-    if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT))
+    // fails if spork 8 is enabled and
+    // spork 113 is disabled or current time is outside the reconsider window
+    if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
         return false;
-    LogPrint(BCLog::MASTERNODE,"Masternode payment enforcement is disabled, accepting block\n");
-    return true;
+    } else {
+        LogPrint(BCLog::MASTERNODE,"Masternode payment enforcement is disabled, accepting block\n");
+        return true;
+    }
 }
-
 
 void FillBlockPayee(CMutableTransaction& txNew, const CBlockIndex* pindexPrev, bool fProofOfStake)
 {
@@ -303,11 +286,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, const CBloc
     bool hasPayment = true;
     CScript payee;
 
-    int nHeight = pindexPrev->nHeight + 1;
-    const Consensus::Params& consensus = Params().GetConsensus();
-
     //spork
-    if (!masternodePayments.GetBlockPayee(nHeight, payee)) {
+    if (!masternodePayments.GetBlockPayee(pindexPrev->nHeight + 1, payee)) {
         //no masternode detected
         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
         if (winningNode) {
@@ -318,21 +298,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, const CBloc
         }
     }
 
-    CAmount masternodePayment = CMasternode::GetMasternodePayment(nHeight);
-    CAmount blockValue = CMasternode::GetBlockValue(nHeight);
-    CAmount azzrCoinSupplyMint = 0;
-    CScript azzrPayee;
-
-    // AZZR coin supply mint
-    if (consensus.nAZZRCoinSupplyMintHeight == nHeight) {
-        azzrCoinSupplyMint = consensus.nAZZRCoinSupply;
-        azzrPayee = GetScriptForDestination(DecodeDestination(consensus.sAZZRCoinSupplyMintAddress));
-    }
-
-    //subtract mn payment from the stake reward plus the AZZR coin supply mint 
-    CAmount reductionAmount = masternodePayment + azzrCoinSupplyMint;
-
     if (hasPayment) {
+        CAmount masternodePayment = CMasternode::GetMasternodePayment(pindexPrev->nHeight + 1);
         if (fProofOfStake) {
             /**For Proof Of Stake vout[0] must be null
              * Stake reward can be split into many different outputs, so we must
@@ -347,12 +314,12 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, const CBloc
             //subtract mn payment from the stake reward
             if (i == 2) {
                 // Majority of cases; do it quick and move on
-                txNew.vout[i - 1].nValue -= reductionAmount;
+                txNew.vout[i - 1].nValue -= masternodePayment;
             } else if (i > 2) {
                 // special case, stake is split between (i-1) outputs
                 unsigned int outputs = i-1;
-                CAmount mnPaymentSplit = reductionAmount / outputs;
-                CAmount mnPaymentRemainder = reductionAmount - (mnPaymentSplit * outputs);
+                CAmount mnPaymentSplit = masternodePayment / outputs;
+                CAmount mnPaymentRemainder = masternodePayment - (mnPaymentSplit * outputs);
                 for (unsigned int j=1; j<=outputs; j++) {
                     txNew.vout[j].nValue -= mnPaymentSplit;
                 }
@@ -363,28 +330,13 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, const CBloc
             txNew.vout.resize(2);
             txNew.vout[1].scriptPubKey = payee;
             txNew.vout[1].nValue = masternodePayment;
-            txNew.vout[0].nValue = blockValue - reductionAmount;
+            txNew.vout[0].nValue = CRewards::GetBlockValue(pindexPrev->nHeight + 1) - masternodePayment;
         }
 
         CTxDestination address1;
         ExtractDestination(payee, address1);
 
         LogPrint(BCLog::MASTERNODE,"Masternode payment of %s to %s\n", FormatMoney(masternodePayment).c_str(), EncodeDestination(address1).c_str());
-    } else {
-        // removes the AZZR coin supply mint if there is no masternode to pay
-        if (fProofOfStake) {
-            txNew.vout[txNew.vout.size() - 1].nValue = blockValue - azzrCoinSupplyMint;
-        } else {
-            txNew.vout[0].nValue = blockValue - azzrCoinSupplyMint;
-        }
-    }
-
-    // Adds AZZR coin supply mint
-    if(azzrCoinSupplyMint > 0) {
-        unsigned int i = txNew.vout.size();
-        txNew.vout.resize(i + 1);
-        txNew.vout[i].scriptPubKey = azzrPayee;
-        txNew.vout[i].nValue = azzrCoinSupplyMint;
     }
 }
 
