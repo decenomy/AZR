@@ -376,8 +376,6 @@ static const CRPCCommand vRPCCommands[] =
         {"azzure", "listmasternodeconf", &listmasternodeconf, true },
         {"azzure", "getactivemasternodecount", &getactivemasternodecount, true },
         {"azzure", "getmasternodestatus", &getmasternodestatus, true },
-        {"azzure", "getmasternodewinners", &getmasternodewinners, true },
-        {"azzure", "getmasternodescores", &getmasternodescores, true },
         {"azzure", "mnsync", &mnsync, true },
         {"azzure", "spork", &spork, true },
         {"azzure", "mnping", &mnping, true },

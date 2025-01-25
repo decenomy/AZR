@@ -57,7 +57,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state)
 {
     const Consensus::Params& consensus = Params().GetConsensus();
 
-    if(tx.IsCoinStake() && tx.HasP2CSOutputs() && consensus.NetworkUpgradeActive(chainActive.Height(), Consensus::UPGRADE_MASTERNODE_RANK_V2)) {
+    if(tx.IsCoinStake() && tx.HasP2CSOutputs() && consensus.NetworkUpgradeActive(chainActive.Height(), Consensus::UPGRADE_STAKE_MIN_DEPTH_V2)) {
         return state.DoS(100, false, REJECT_INVALID, "disabled-cold-staking-legacy");
     }
 
